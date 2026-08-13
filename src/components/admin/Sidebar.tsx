@@ -7,18 +7,22 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
-  Globe, // ✅ replaced Web with Globe
+  Globe,
   Settings,
   LogOut,
   Users,
+  BarChart3,
+  History, // ✅ added missing import
 } from "lucide-react";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
-  { href: "/admin/cms", label: "CMS Builder", icon: Globe }, // ✅ updated
+  { href: "/admin/cms", label: "CMS Builder", icon: Globe },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/reports", label: "Reports", icon: BarChart3 },
+  { href: "/admin/audit-logs", label: "Audit Logs", icon: History }, // ✅ now works
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

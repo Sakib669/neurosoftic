@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 type Category = { id: string; name: string };
 type Brand = { id: string; name: string };
@@ -41,7 +42,9 @@ export default function EditProductForm({
   const [formData, setFormData] = useState(initialData);
 
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
@@ -93,17 +96,33 @@ export default function EditProductForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">Name</label>
-          <Input name="name" value={formData.name} onChange={handleChange} required />
+          <Input
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Slug</label>
-          <Input name="slug" value={formData.slug} onChange={handleChange} required />
+          <Input
+            name="slug"
+            value={formData.slug}
+            onChange={handleChange}
+            required
+          />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Short Description</label>
-        <Input name="shortDescription" value={formData.shortDescription} onChange={handleChange} />
+        <label className="block text-sm font-medium mb-1">
+          Short Description
+        </label>
+        <Input
+          name="shortDescription"
+          value={formData.shortDescription}
+          onChange={handleChange}
+        />
       </div>
       <div>
         <label className="block text-sm font-medium mb-1">Description</label>
@@ -119,14 +138,32 @@ export default function EditProductForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">Category</label>
-          <select name="categoryId" value={formData.categoryId} onChange={handleChange} className="w-full rounded border border-outline-variant px-3 py-2">
-            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          <select
+            name="categoryId"
+            value={formData.categoryId}
+            onChange={handleChange}
+            className="w-full rounded border border-outline-variant px-3 py-2"
+          >
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
           </select>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Brand</label>
-          <select name="brandId" value={formData.brandId} onChange={handleChange} className="w-full rounded border border-outline-variant px-3 py-2">
-            {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+          <select
+            name="brandId"
+            value={formData.brandId}
+            onChange={handleChange}
+            className="w-full rounded border border-outline-variant px-3 py-2"
+          >
+            {brands.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -134,15 +171,34 @@ export default function EditProductForm({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">Price</label>
-          <Input name="price" type="number" step="0.01" value={formData.price} onChange={handleChange} required />
+          <Input
+            name="price"
+            type="number"
+            step="0.01"
+            value={formData.price}
+            onChange={handleChange}
+            required
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Sale Price</label>
-          <Input name="salePrice" type="number" step="0.01" value={formData.salePrice || ""} onChange={handleChange} />
+          <Input
+            name="salePrice"
+            type="number"
+            step="0.01"
+            value={formData.salePrice || ""}
+            onChange={handleChange}
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Quantity</label>
-          <Input name="quantity" type="number" value={formData.quantity} onChange={handleChange} required />
+          <Input
+            name="quantity"
+            type="number"
+            value={formData.quantity}
+            onChange={handleChange}
+            required
+          />
         </div>
       </div>
 
@@ -153,7 +209,12 @@ export default function EditProductForm({
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Status</label>
-          <select name="status" value={formData.status} onChange={handleChange} className="w-full rounded border border-outline-variant px-3 py-2">
+          <select
+            name="status"
+            value={formData.status}
+            onChange={handleChange}
+            className="w-full rounded border border-outline-variant px-3 py-2"
+          >
             <option value="ACTIVE">Active</option>
             <option value="DRAFT">Draft</option>
             <option value="INACTIVE">Inactive</option>
@@ -161,9 +222,13 @@ export default function EditProductForm({
         </div>
       </div>
 
+      {/* Image upload field replaces plain Image URL */}
       <div>
-        <label className="block text-sm font-medium mb-1">Image URL</label>
-        <Input name="mediaUrl" value={formData.mediaUrl} onChange={handleChange} />
+        <label className="block text-sm font-medium mb-1">Product Image</label>
+        <ImageUpload
+          initialUrl={formData.mediaUrl || ""}
+          onUpload={(url) => setFormData({ ...formData, mediaUrl: url })}
+        />
       </div>
 
       <Button type="submit" disabled={loading}>
