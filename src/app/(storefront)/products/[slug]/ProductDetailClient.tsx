@@ -156,7 +156,7 @@ export default function ProductDetailClient({
               {product.media.map((m, idx) => (
                 <button
                   key={idx}
-                  className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-outline-variant"
+                  className="h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-outline-variant"
                 >
                   <img
                     src={m.url}

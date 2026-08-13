@@ -2,6 +2,7 @@
 import { notFound } from "next/navigation";
 import { getOrderByNumber } from "@/lib/services/orderAdminService";
 import OrderStatusForm from "./OrderStatusForm";
+import ShipmentButton from "./ShipmentButton";
 
 export default async function AdminOrderDetailPage({
   params,
@@ -150,6 +151,30 @@ export default async function AdminOrderDetailPage({
             ) : (
               <p className="text-sm text-on-surface-variant">No address</p>
             )}
+          </div>
+
+          {/* Courier / Shipment Section */}
+          <div className="rounded-lg border border-outline-variant bg-surface p-6 space-y-3">
+            <h2 className="font-semibold">Courier</h2>
+            {order.shipment ? (
+              <div className="text-sm space-y-1">
+                <p>
+                  <span className="text-on-surface-variant">Provider:</span>{" "}
+                  {order.shipment.courierProviderId ? "Steadfast" : "N/A"}
+                </p>
+                <p>
+                  <span className="text-on-surface-variant">Tracking #:</span>{" "}
+                  {order.shipment.trackingNumber || "N/A"}
+                </p>
+                <p>
+                  <span className="text-on-surface-variant">Status:</span>{" "}
+                  {order.shipment.status}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-on-surface-variant">No shipment created.</p>
+            )}
+            <ShipmentButton orderId={order.id} />
           </div>
 
           <OrderStatusForm
