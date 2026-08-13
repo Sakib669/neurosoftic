@@ -2,22 +2,22 @@
 import prisma from "@/lib/db";
 import { notFound } from "next/navigation";
 import ProductDetailClient from "./ProductDetailClient";
+import { auth } from "../../../../../auth";
 
 export default async function ProductDetailPage({
   params,
 }: {
-  // In Next.js 16, params is a Promise
   params: Promise<{ slug: string }>;
 }) {
-  // Await params to get the slug
+  // Get current session to know if user is logged in
+  const session = await auth();
+  const isLoggedIn = !!session?.user?.id;
+
   const { slug } = await params;
 
-  // Use findFirst because we also filter by status (not a unique field)
+  // Fetch product with all necessary includes
   const product = await prisma.product.findFirst({
-    where: {
-      slug,
-      status: "ACTIVE",
-    },
+    where: { slug, status: "ACTIVE" },
     include: {
       media: { orderBy: { sortOrder: "asc" } },
       variants: {
@@ -25,7 +25,7 @@ export default async function ProductDetailPage({
           attributes: {
             include: { attributeValue: { include: { group: true } } },
           },
-          inventories: true, // plural relation
+          inventories: true,
         },
         orderBy: { createdAt: "asc" },
       },
@@ -36,7 +36,7 @@ export default async function ProductDetailPage({
 
   if (!product) notFound();
 
-  // Get all attribute groups and values for the variant selector
+  // Build attribute groups for variant selector
   const attributeGroups = new Map<
     string,
     { name: string; values: { id: string; value: string }[] }
@@ -62,6 +62,7 @@ export default async function ProductDetailPage({
 
   return (
     <ProductDetailClient
+      isLoggedIn={isLoggedIn}
       product={{
         id: product.id,
         name: product.name,
