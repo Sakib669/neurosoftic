@@ -1,5 +1,6 @@
 // components/shared/Header.tsx
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { CartIcon } from "./CartIcon";
 import { WishlistIcon } from "./WishlistIcon";
 import { SignOutButton } from "./SignOutButton";
@@ -18,24 +19,45 @@ export async function Header() {
 
         {/* Navigation */}
         <nav className="hidden md:flex space-x-6">
-          <Link href="/products" className="text-sm text-on-surface/70 hover:text-primary">
+          <Link
+            href="/products"
+            className="text-sm text-on-surface/70 hover:text-primary"
+          >
             Shop
           </Link>
-          <Link href="/categories" className="text-sm text-on-surface/70 hover:text-primary">
+          <Link
+            href="/categories"
+            className="text-sm text-on-surface/70 hover:text-primary"
+          >
             Categories
           </Link>
-          <Link href="/brands" className="text-sm text-on-surface/70 hover:text-primary">
+          <Link
+            href="/brands"
+            className="text-sm text-on-surface/70 hover:text-primary"
+          >
             Brands
           </Link>
-          <Link href="/offers" className="text-sm text-on-surface/70 hover:text-primary">
+          <Link
+            href="/offers"
+            className="text-sm text-on-surface/70 hover:text-primary"
+          >
             Offers
           </Link>
         </nav>
 
         {/* Actions */}
         <div className="flex items-center space-x-4">
+          {/* Search link */}
+          <Link
+            href="/search"
+            className="p-2 text-on-surface/70 hover:text-primary transition"
+          >
+            <Search className="h-5 w-5" />
+          </Link>
+
           <WishlistIcon />
           <CartIcon />
+
           {session?.user ? (
             <div className="flex items-center space-x-2">
               <Link href="/account" className="text-sm">
