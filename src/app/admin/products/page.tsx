@@ -45,7 +45,7 @@ export default async function AdminProductsPage() {
                 <tr key={product.id} className="hover:bg-surface-container-low">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded bg-surface-container-high overflow-hidden flex-shrink-0">
+                      <div className="h-10 w-10 rounded bg-surface-container-high overflow-hidden shrink-0">
                         {product.media[0] && (
                           <img
                             src={product.media[0].url}
@@ -73,7 +73,13 @@ export default async function AdminProductsPage() {
                       {product.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right space-x-3">
+                    <Link
+                      href={`/admin/products/${product.id}/variants`}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Variants
+                    </Link>
                     <Link
                       href={`/admin/products/${product.id}/edit`}
                       className="text-sm text-primary hover:underline"
