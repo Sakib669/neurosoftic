@@ -19,7 +19,7 @@ export default function CartPage() {
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
               <div key={item.variantId} className="flex gap-4 rounded-lg border border-outline-variant p-4">
-                <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded bg-surface-container">
+                <div className="h-24 w-24 shrink-0 overflow-hidden rounded bg-surface-container">
                   <img src={item.image || "/placeholder.png"} alt={item.name} className="h-full w-full object-cover" />
                 </div>
                 <div className="flex-1">
