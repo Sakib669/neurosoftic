@@ -17,6 +17,7 @@ type Variant = {
   stock: number;
 };
 type AttributeGroup = {
+  id: string; // ✅ added id
   name: string;
   values: { id: string; value: string }[];
 };
@@ -48,12 +49,12 @@ export default function ProductDetailClient({
   const { addItem } = useCart();
   const guestWishlist = useGuestWishlist();
 
-  // Initialize selectedAttrs with first value of each group (only once)
+  // Initialize selectedAttrs with first value of each group (using group ID as key)
   useEffect(() => {
     const initial: Record<string, string> = {};
     for (const group of product.attributeGroups) {
       if (group.values.length > 0) {
-        initial[group.name] = group.values[0].id;
+        initial[group.id] = group.values[0].id; // ✅ group.id
       }
     }
     setSelectedAttrs(initial);
@@ -71,7 +72,6 @@ export default function ProductDetailClient({
     if (!isLoggedIn && selectedVariant) {
       setWishlistActive(guestWishlist.hasItem(selectedVariant.id));
     } else {
-      // For logged-in, we won't preselect; user can toggle manually.
       setWishlistActive(false);
     }
   }, [selectedVariant, isLoggedIn, guestWishlist]);
@@ -104,7 +104,6 @@ export default function ProductDetailClient({
     if (!selectedVariant) return;
 
     if (!isLoggedIn) {
-      // Guest: use local store (toggles)
       guestWishlist.toggleItem({
         variantId: selectedVariant.id,
         productId: product.id,
@@ -120,7 +119,6 @@ export default function ProductDetailClient({
       return;
     }
 
-    // Logged-in: use API
     try {
       const method = wishlistActive ? "DELETE" : "POST";
       const res = await fetch("/api/account/wishlist", {
@@ -156,7 +154,7 @@ export default function ProductDetailClient({
               {product.media.map((m, idx) => (
                 <button
                   key={idx}
-                  className="h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-outline-variant"
+                  className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-outline-variant"
                 >
                   <img
                     src={m.url}
@@ -192,7 +190,7 @@ export default function ProductDetailClient({
 
           {/* Attribute selectors */}
           {product.attributeGroups.map((group) => (
-            <div key={group.name} className="mt-6">
+            <div key={group.id} className="mt-6">
               <label className="mb-2 block text-sm font-medium text-on-surface">
                 {group.name}
               </label>
@@ -203,11 +201,11 @@ export default function ProductDetailClient({
                     onClick={() =>
                       setSelectedAttrs((prev) => ({
                         ...prev,
-                        [group.name]: value.id,
+                        [group.id]: value.id,
                       }))
                     }
                     className={`rounded border px-4 py-2 text-sm transition ${
-                      selectedAttrs[group.name] === value.id
+                      selectedAttrs[group.id] === value.id
                         ? "border-primary bg-primary text-on-primary"
                         : "border-outline-variant hover:border-primary"
                     }`}

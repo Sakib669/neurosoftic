@@ -104,7 +104,7 @@ export default async function AccountPage() {
               </p>
             )}
             <Link
-              href="/account/addresses"
+              href="/account/address"
               className="mt-4 inline-block text-sm text-primary hover:underline"
             >
               Manage Addresses

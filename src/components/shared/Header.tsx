@@ -27,33 +27,15 @@ export async function Header() {
             Shop
           </Link>
           <Link
-            href="/categories"
+            href="/search"
             className="text-sm text-on-surface/70 hover:text-primary"
           >
-            Categories
-          </Link>
-          <Link
-            href="/brands"
-            className="text-sm text-on-surface/70 hover:text-primary"
-          >
-            Brands
-          </Link>
-          <Link
-            href="/offers"
-            className="text-sm text-on-surface/70 hover:text-primary"
-          >
-            Offers
+            Search
           </Link>
         </nav>
 
         {/* Actions */}
         <div className="flex items-center space-x-4">
-          <Link
-            href="/search"
-            className="p-2 text-on-surface/70 hover:text-primary transition"
-          >
-            <Search className="h-5 w-5" />
-          </Link>
 
           <WishlistIcon isLoggedIn={isLoggedIn} />
           <CartIcon />

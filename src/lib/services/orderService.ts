@@ -1,112 +1,133 @@
-// lib/services/orderAdminService.ts
+// lib/services/orderService.ts
 import prisma from "@/lib/db";
+import type { CheckoutInput } from "@/lib/validators/order";
 
-// Get all orders for admin (with pagination placeholders)
-export async function getAllOrders() {
-  return prisma.order.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      customer: { select: { name: true, email: true } },
-      items: { select: { id: true } },
-    },
-    take: 100,
-  });
-}
+// Define a type for the order item data to avoid implicit any
+type OrderItemInput = {
+  variantId: string;
+  productName: string;
+  variantName: string;
+  sku: string;
+  barcode?: string | null;
+  price: number;
+  quantity: number;
+  total: number;
+};
 
-// Get a single order by order number with full details
-export async function getOrderByNumber(orderNumber: string) {
-  return prisma.order.findUnique({
-    where: { orderNumber },
-    include: {
-      customer: { select: { name: true, email: true, phone: true } },
-      shippingAddress: true,
-      billingAddress: true,
-      items: {
-        include: {
-          variant: {
-            include: {
-              product: {
-                select: {
-                  name: true,
-                  media: { where: { primary: true }, take: 1 },
-                },
-              },
-            },
-          },
-        },
-      },
-      statusHistory: { orderBy: { createdAt: "desc" } },
-      payments: true,
-      shipment: {
-        include: {
-          courierProvider: true, // ✅ include courier provider
-        },
-      },
+export async function createOrder(userId: string, data: CheckoutInput) {
+  // 1. Create shipping address
+  const address = await prisma.address.create({
+    data: {
+      userId,
+      fullName: data.fullName,
+      phone: data.phone,
+      line1: data.addressLine1,
+      line2: data.addressLine2,
+      city: data.city,
+      state: data.state,
+      postalCode: data.postalCode,
+      country: data.country,
+      isDefault: false,
     },
   });
-}
 
-// Update order status and create history entry
-export async function updateOrderStatus(
-  orderId: string,
-  newStatus: string,
-  actorId?: string,
-  note?: string,
-) {
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order) throw new Error("Order not found");
+  // 2. Fetch variants to build snapshot and compute totals
+  const variantIds = data.items.map((i) => i.variantId);
+  const variants = await prisma.productVariant.findMany({
+    where: { id: { in: variantIds } },
+    include: {
+      product: true,
+      attributes: { include: { attributeValue: true } },
+    },
+  });
 
-  const fromStatus = order.status;
+  if (variants.length !== data.items.length) {
+    throw new Error("Some products are no longer available.");
+  }
 
-  return prisma.$transaction(async (tx) => {
-    // Update order status
-    await tx.order.update({
-      where: { id: orderId },
-      data: { status: newStatus as any },
+  // Explicitly typed array
+  const orderItemsData: OrderItemInput[] = [];
+  let subtotal = 0;
+
+  for (const item of data.items) {
+    const variant = variants.find((v) => v.id === item.variantId);
+    if (!variant) throw new Error("Variant not found");
+
+    const price = Number(variant.salePrice ?? variant.price);
+    const total = price * item.quantity;
+    subtotal += total;
+
+    const variantName = variant.attributes
+      .map((a) => a.attributeValue.value)
+      .join(" / ");
+
+    orderItemsData.push({
+      variantId: variant.id,
+      productName: variant.product.name,
+      variantName: variantName || "Default",
+      sku: variant.sku,
+      barcode: variant.barcode,
+      price,
+      quantity: item.quantity,
+      total,
     });
+  }
 
-    // Create status history
-    await tx.orderStatusHistory.create({
+  // 3. Calculate shipping and tax (simplified)
+  const shipping = subtotal > 200 ? 0 : 15;
+  const tax = subtotal * 0.05;
+  const total = subtotal + shipping + tax;
+
+  // 4. Generate order number
+  const orderCount = await prisma.order.count();
+  const orderNumber = `ORD-${new Date().getFullYear()}-${(orderCount + 1)
+    .toString()
+    .padStart(4, "0")}`;
+
+  // 5. Create order, items, status history, and update inventory atomically
+  const order = await prisma.$transaction(async (tx) => {
+    const createdOrder = await tx.order.create({
       data: {
-        orderId,
-        fromStatus: fromStatus as any,
-        toStatus: newStatus as any,
-        note: note || `Status changed from ${fromStatus} to ${newStatus}`,
-        actorId,
+        orderNumber,
+        userId,
+        status: data.paymentMethod === "cod" ? "CONFIRMED" : "PENDING_PAYMENT",
+        paymentStatus: "UNPAID",
+        subtotal,
+        discount: 0,
+        shipping,
+        tax,
+        total,
+        shippingAddressId: address.id,
+        notes: data.notes,
+        items: {
+          create: orderItemsData,
+        },
+        statusHistory: {
+          create: {
+            fromStatus: "DRAFT",
+            toStatus:
+              data.paymentMethod === "cod" ? "CONFIRMED" : "PENDING_PAYMENT",
+            note: "Order placed",
+          },
+        },
       },
     });
 
-    // If cancelled/returned, release reserved stock
-    if (newStatus === "CANCELLED" || newStatus === "RETURNED") {
-      const items = await tx.orderItem.findMany({ where: { orderId } });
-      for (const item of items) {
-        await tx.inventory.updateMany({
-          where: {
-            variantId: item.variantId,
-            reserved: { gte: item.quantity },
-          },
-          data: { reserved: { decrement: item.quantity } },
-        });
-      }
+    // Reserve stock
+    for (const item of data.items) {
+      await tx.inventory.updateMany({
+        where: {
+          variantId: item.variantId,
+          quantity: { gte: item.quantity },
+        },
+        data: {
+          reserved: { increment: item.quantity },
+        },
+      });
     }
 
-    // If delivered, reduce actual quantity and reserved
-    if (newStatus === "DELIVERED") {
-      const items = await tx.orderItem.findMany({ where: { orderId } });
-      for (const item of items) {
-        await tx.inventory.updateMany({
-          where: {
-            variantId: item.variantId,
-            reserved: { gte: item.quantity },
-          },
-          data: {
-            reserved: { decrement: item.quantity },
-            quantity: { decrement: item.quantity },
-          },
-        });
-      }
-    }
-
-    return { success: true };
+    return createdOrder;
   });
+
+  return { orderNumber: order.orderNumber, orderId: order.id };
 }

@@ -9,7 +9,7 @@ export default async function ProductDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  // Get current session to know if user is logged in
+  // Check if user is logged in (to pass to client for wishlist logic)
   const session = await auth();
   const isLoggedIn = !!session?.user?.id;
 
@@ -36,17 +36,21 @@ export default async function ProductDetailPage({
 
   if (!product) notFound();
 
-  // Build attribute groups for variant selector
+  // Build attribute groups with IDs for variant selection
   const attributeGroups = new Map<
     string,
-    { name: string; values: { id: string; value: string }[] }
+    { id: string; name: string; values: { id: string; value: string }[] }
   >();
 
   for (const variant of product.variants) {
     for (const attr of variant.attributes) {
       const group = attr.attributeValue.group;
       if (!attributeGroups.has(group.id)) {
-        attributeGroups.set(group.id, { name: group.name, values: [] });
+        attributeGroups.set(group.id, {
+          id: group.id,
+          name: group.name,
+          values: [],
+        });
       }
       const groupEntry = attributeGroups.get(group.id)!;
       if (!groupEntry.values.some((v) => v.id === attr.attributeValue.id)) {
