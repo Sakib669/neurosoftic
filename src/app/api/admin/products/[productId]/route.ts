@@ -1,24 +1,32 @@
-// app/api/admin/products/[productId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { updateProduct, updateDefaultVariant } from "@/lib/services/productService";
+import {
+  updateProduct,
+  updateDefaultVariant,
+} from "@/lib/services/productService";
+import { createAuditLog } from "@/lib/services/auditService"; // ✅ added
 import { auth } from "../../../../../../auth";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ productId: string }> }
+  { params }: { params: Promise<{ productId: string }> },
 ) {
   try {
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user?.id)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const allowed = ["SUPER_ADMIN", "ADMIN", "CATALOG_MANAGER"];
-    if (!allowed.includes(session.user.role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!allowed.includes(session.user.role))
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const { productId } = await params;
     const body = await req.json();
 
-    // Validate basic inputs (simplified, no zod here; we assume client sends correct shape)
     await updateProduct(productId, body);
-    if (body.price !== undefined || body.quantity !== undefined || body.sku !== undefined) {
+    if (
+      body.price !== undefined ||
+      body.quantity !== undefined ||
+      body.sku !== undefined
+    ) {
       await updateDefaultVariant(productId, {
         price: body.price,
         salePrice: body.salePrice,
@@ -26,6 +34,14 @@ export async function PATCH(
         sku: body.sku,
       });
     }
+
+    // ✅ Audit log
+    await createAuditLog(
+      session.user.id,
+      "UPDATE_PRODUCT",
+      "Product",
+      productId,
+    );
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

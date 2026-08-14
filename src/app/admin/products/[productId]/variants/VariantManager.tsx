@@ -1,3 +1,4 @@
+// app/admin/products/[productId]/variants/VariantManager.tsx
 "use client";
 
 import { useState } from "react";
@@ -10,7 +11,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 type Variant = {
@@ -49,11 +49,13 @@ export default function VariantManager({
 }) {
   const router = useRouter();
   const [variants, setVariants] = useState<Variant[]>(initialVariants);
-  const [open, setOpen] = useState(false);
+  const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Form state
-  const [formData, setFormData] = useState({
+  // Add form state
+  const [addForm, setAddForm] = useState({
     sku: "",
     barcode: "",
     price: "",
@@ -61,23 +63,35 @@ export default function VariantManager({
     costPrice: "",
     quantity: "",
     isDefault: false,
-    attributeValueIds: {} as Record<string, string>, // groupId -> valueId
+    attributeValueIds: {} as Record<string, string>,
+  });
+
+  // Edit form state
+  const [editForm, setEditForm] = useState({
+    sku: "",
+    price: "",
+    salePrice: "",
+    costPrice: "",
+    quantity: "",
+    status: "ACTIVE",
   });
 
   async function handleAddVariant(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 
-    const attributeValueIds = Object.values(formData.attributeValueIds).filter(Boolean) as string[];
+    const attributeValueIds = Object.values(addForm.attributeValueIds).filter(
+      Boolean,
+    ) as string[];
 
     const payload = {
-      sku: formData.sku,
-      barcode: formData.barcode || undefined,
-      price: Number(formData.price),
-      salePrice: formData.salePrice ? Number(formData.salePrice) : undefined,
-      costPrice: formData.costPrice ? Number(formData.costPrice) : undefined,
-      quantity: Number(formData.quantity),
-      isDefault: formData.isDefault,
+      sku: addForm.sku,
+      barcode: addForm.barcode || undefined,
+      price: Number(addForm.price),
+      salePrice: addForm.salePrice ? Number(addForm.salePrice) : undefined,
+      costPrice: addForm.costPrice ? Number(addForm.costPrice) : undefined,
+      quantity: Number(addForm.quantity),
+      isDefault: addForm.isDefault,
       attributeValueIds,
     };
 
@@ -92,7 +106,54 @@ export default function VariantManager({
 
       setVariants((prev) => [...prev, data]);
       toast.add({ title: "Variant created" });
-      setOpen(false);
+      setOpenAdd(false);
+      router.refresh();
+    } catch (error: any) {
+      toast.add({ title: "Error", description: error.message });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleEditVariant(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingVariant) return;
+    setLoading(true);
+
+    const payload = {
+      sku: editForm.sku,
+      price: Number(editForm.price),
+      salePrice: editForm.salePrice ? Number(editForm.salePrice) : undefined,
+      costPrice: editForm.costPrice ? Number(editForm.costPrice) : undefined,
+      quantity: Number(editForm.quantity),
+      status: editForm.status,
+    };
+
+    try {
+      const res = await fetch(`/api/admin/variants/${editingVariant.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Update failed");
+
+      setVariants((prev) =>
+        prev.map((v) =>
+          v.id === editingVariant.id
+            ? {
+                ...v,
+                ...payload,
+                price: payload.price,
+                salePrice: payload.salePrice,
+                costPrice: payload.costPrice,
+                status: payload.status,
+              }
+            : v,
+        ),
+      );
+      toast.add({ title: "Variant updated" });
+      setOpenEdit(false);
       router.refresh();
     } catch (error: any) {
       toast.add({ title: "Error", description: error.message });
@@ -104,9 +165,12 @@ export default function VariantManager({
   async function handleDeleteVariant(variantId: string) {
     if (!confirm("Delete this variant?")) return;
     try {
-      const res = await fetch(`/api/admin/variants/${variantId}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/variants/${variantId}`, {
+        method: "DELETE",
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Delete failed");
+
       setVariants((prev) => prev.filter((v) => v.id !== variantId));
       toast.add({ title: "Variant deleted" });
       router.refresh();
@@ -117,9 +181,10 @@ export default function VariantManager({
 
   return (
     <div className="space-y-6">
-      <Button onClick={() => setOpen(true)}>Add Variant</Button>
+      <Button onClick={() => setOpenAdd(true)}>Add Variant</Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      {/* Add Dialog */}
+      <Dialog open={openAdd} onOpenChange={setOpenAdd}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Add New Variant</DialogTitle>
@@ -128,42 +193,54 @@ export default function VariantManager({
             <div className="grid grid-cols-2 gap-4">
               <Input
                 placeholder="SKU"
-                value={formData.sku}
-                onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                value={addForm.sku}
+                onChange={(e) =>
+                  setAddForm({ ...addForm, sku: e.target.value })
+                }
                 required
               />
               <Input
                 placeholder="Barcode (optional)"
-                value={formData.barcode}
-                onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                value={addForm.barcode}
+                onChange={(e) =>
+                  setAddForm({ ...addForm, barcode: e.target.value })
+                }
               />
               <Input
                 type="number"
                 step="0.01"
                 placeholder="Price"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                value={addForm.price}
+                onChange={(e) =>
+                  setAddForm({ ...addForm, price: e.target.value })
+                }
                 required
               />
               <Input
                 type="number"
                 step="0.01"
                 placeholder="Sale Price"
-                value={formData.salePrice}
-                onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
+                value={addForm.salePrice}
+                onChange={(e) =>
+                  setAddForm({ ...addForm, salePrice: e.target.value })
+                }
               />
               <Input
                 type="number"
                 step="0.01"
                 placeholder="Cost Price"
-                value={formData.costPrice}
-                onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
+                value={addForm.costPrice}
+                onChange={(e) =>
+                  setAddForm({ ...addForm, costPrice: e.target.value })
+                }
               />
               <Input
                 type="number"
                 placeholder="Quantity"
-                value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                value={addForm.quantity}
+                onChange={(e) =>
+                  setAddForm({ ...addForm, quantity: e.target.value })
+                }
                 required
               />
             </div>
@@ -177,12 +254,12 @@ export default function VariantManager({
                     <label className="w-32 text-sm">{group.name}</label>
                     <select
                       className="flex-1 rounded border border-outline-variant px-3 py-2"
-                      value={formData.attributeValueIds[group.id] || ""}
+                      value={addForm.attributeValueIds[group.id] || ""}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
+                        setAddForm({
+                          ...addForm,
                           attributeValueIds: {
-                            ...formData.attributeValueIds,
+                            ...addForm.attributeValueIds,
                             [group.id]: e.target.value,
                           },
                         })
@@ -203,8 +280,10 @@ export default function VariantManager({
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
-                checked={formData.isDefault}
-                onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
+                checked={addForm.isDefault}
+                onChange={(e) =>
+                  setAddForm({ ...addForm, isDefault: e.target.checked })
+                }
               />
               <span className="text-sm">Set as default variant</span>
             </label>
@@ -213,6 +292,80 @@ export default function VariantManager({
               {loading ? "Creating..." : "Create Variant"}
             </Button>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={openEdit} onOpenChange={setOpenEdit}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Edit Variant</DialogTitle>
+          </DialogHeader>
+          {editingVariant && (
+            <form onSubmit={handleEditVariant} className="space-y-4 py-4">
+              <Input
+                placeholder="SKU"
+                value={editForm.sku}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, sku: e.target.value })
+                }
+                required
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="Price"
+                  value={editForm.price}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, price: e.target.value })
+                  }
+                  required
+                />
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="Sale Price"
+                  value={editForm.salePrice}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, salePrice: e.target.value })
+                  }
+                />
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="Cost Price"
+                  value={editForm.costPrice}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, costPrice: e.target.value })
+                  }
+                />
+                <Input
+                  type="number"
+                  placeholder="Quantity"
+                  value={editForm.quantity}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, quantity: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <select
+                value={editForm.status}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, status: e.target.value })
+                }
+                className="w-full rounded border border-outline-variant px-3 py-2"
+              >
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+                <option value="DRAFT">Draft</option>
+              </select>
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading ? "Saving..." : "Update Variant"}
+              </Button>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -226,7 +379,9 @@ export default function VariantManager({
               <th className="px-4 py-3 text-sm font-medium">Price</th>
               <th className="px-4 py-3 text-sm font-medium">Qty</th>
               <th className="px-4 py-3 text-sm font-medium">Default</th>
-              <th className="px-4 py-3 text-sm font-medium text-right">Actions</th>
+              <th className="px-4 py-3 text-sm font-medium text-right">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant">
@@ -234,15 +389,47 @@ export default function VariantManager({
               <tr key={variant.id} className="hover:bg-surface-container-low">
                 <td className="px-4 py-3">{variant.sku}</td>
                 <td className="px-4 py-3 text-sm">
-                  {variant.attributes.map((a) => a.attributeValue.value).join(" / ") || "—"}
+                  {variant.attributes
+                    .map((a) => a.attributeValue.value)
+                    .join(" / ") || "—"}
                 </td>
                 <td className="px-4 py-3">
                   ${(variant.salePrice ?? variant.price).toString()}
                 </td>
-                <td className="px-4 py-3">{variant.inventories?.[0]?.quantity ?? 0}</td>
+                <td className="px-4 py-3">
+                  {variant.inventories?.[0]?.quantity ?? 0}
+                </td>
                 <td className="px-4 py-3">{variant.isDefault ? "✓" : ""}</td>
-                <td className="px-4 py-3 text-right">
-                  <Button variant="outline" size="sm" onClick={() => handleDeleteVariant(variant.id)}>
+                <td className="px-4 py-3 text-right space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditingVariant(variant);
+                      setEditForm({
+                        sku: variant.sku,
+                        price: String(variant.price),
+                        salePrice: variant.salePrice
+                          ? String(variant.salePrice)
+                          : "",
+                        costPrice: variant.costPrice
+                          ? String(variant.costPrice)
+                          : "",
+                        quantity: String(
+                          variant.inventories?.[0]?.quantity ?? 0,
+                        ),
+                        status: variant.status,
+                      });
+                      setOpenEdit(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteVariant(variant.id)}
+                  >
                     Delete
                   </Button>
                 </td>

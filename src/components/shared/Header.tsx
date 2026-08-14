@@ -8,6 +8,7 @@ import { auth } from "../../../auth";
 
 export async function Header() {
   const session = await auth();
+  const isLoggedIn = !!session?.user?.id;
 
   return (
     <header className="sticky top-0 z-50 border-b bg-surface">
@@ -47,7 +48,6 @@ export async function Header() {
 
         {/* Actions */}
         <div className="flex items-center space-x-4">
-          {/* Search link */}
           <Link
             href="/search"
             className="p-2 text-on-surface/70 hover:text-primary transition"
@@ -55,10 +55,10 @@ export async function Header() {
             <Search className="h-5 w-5" />
           </Link>
 
-          <WishlistIcon />
+          <WishlistIcon isLoggedIn={isLoggedIn} />
           <CartIcon />
 
-          {session?.user ? (
+          {isLoggedIn ? (
             <div className="flex items-center space-x-2">
               <Link href="/account" className="text-sm">
                 Account
