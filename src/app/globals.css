@@ -5,6 +5,17 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+    --color-primary: #000666;
+  --color-primary-container: #1a237e;
+  --color-secondary: #505f76;
+  --color-background: #fcf9f8;
+  --color-surface: #fcf9f8;
+  --color-surface-container: #f0eded;
+  --color-on-surface: #1c1b1b;
+  --color-on-primary: #ffffff;
+  --font-heading: var(--font-outfit);
+  --font-body: var(--font-inter);
+  --radius: 0.5rem;
   --color-background: ...;
   --color-foreground: ...;
   --color-primary: #0b1c30; /* adjust based on chosen theme */

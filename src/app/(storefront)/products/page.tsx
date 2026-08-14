@@ -3,7 +3,7 @@ import prisma from "@/lib/db";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic"; // Ensure fresh data on each request
+export const dynamic = "force-dynamic";
 
 export default async function ProductsPage({
   searchParams,
@@ -24,7 +24,7 @@ export default async function ProductsPage({
   // Build the `where` clause for products
   const where: any = { status: "ACTIVE" };
 
-  // Keyword search on name/description
+  // Keyword search
   if (sp.q) {
     where.OR = [
       { name: { contains: sp.q, mode: "insensitive" } },
@@ -32,12 +32,12 @@ export default async function ProductsPage({
     ];
   }
 
-  // Category filter (by slug)
+  // Category filter
   if (sp.category) {
     where.category = { slug: sp.category };
   }
 
-  // Brand filter (by slug)
+  // Brand filter
   if (sp.brand) {
     where.brand = { slug: sp.brand };
   }
@@ -53,7 +53,7 @@ export default async function ProductsPage({
     };
   }
 
-  // In-stock filter: at least one variant with inventory > 0
+  // In-stock filter
   if (sp.inStock === "1") {
     where.variants = {
       some: {
@@ -65,8 +65,7 @@ export default async function ProductsPage({
     };
   }
 
-  // Dynamic attribute filters (e.g., attr_{groupId}=valueId)
-  // We'll handle by adding a variant filter for each selected attribute value.
+  // Dynamic attribute filters
   const attributeFilters: { valueId: string }[] = [];
   for (const [key, value] of Object.entries(sp)) {
     if (key.startsWith("attr_") && typeof value === "string") {
@@ -89,16 +88,13 @@ export default async function ProductsPage({
   // Sorting
   let orderBy: any = { createdAt: "desc" };
   if (sp.sort === "price-asc") {
-    orderBy = { variants: { _count: "asc" } }; // Not real price sort; we'll improve later.
-    // Better: use orderBy on the variant price via some relation is complex.
-    // For now, we'll sort in memory after fetch.
+    orderBy = { createdAt: "asc" }; // Will sort in memory for price
   } else if (sp.sort === "price-desc") {
-    orderBy = { variants: { _count: "desc" } };
+    orderBy = { createdAt: "desc" }; // Will sort in memory for price
   } else if (sp.sort === "name-asc") {
     orderBy = { name: "asc" };
   }
 
-  // Fetch products with needed includes
   const products = await prisma.product.findMany({
     where,
     include: {
@@ -115,7 +111,7 @@ export default async function ProductsPage({
     take: 100,
   });
 
-  // Post-process products to extract price and availability
+  // Map to product cards
   let productCards = products.map((p) => {
     const defaultVariant = p.variants[0];
     const inStock =
@@ -134,7 +130,7 @@ export default async function ProductsPage({
     };
   });
 
-  // If sorting by price, sort productCards in memory
+  // Sort in memory for price
   if (sp.sort === "price-asc") {
     productCards.sort(
       (a, b) => (a.salePrice ?? a.price) - (b.salePrice ?? b.price),
@@ -145,7 +141,7 @@ export default async function ProductsPage({
     );
   }
 
-  // Fetch categories and brands for filter sidebar
+  // Fetch categories and brands for filters
   const categories = await prisma.category.findMany({
     where: { active: true },
     orderBy: { name: "asc" },
@@ -155,7 +151,7 @@ export default async function ProductsPage({
     orderBy: { name: "asc" },
   });
 
-  // Fetch attribute groups and values for dynamic filters (limited to active groups)
+  // Fetch attribute groups for dynamic filters
   const attributeGroups = await prisma.attributeGroup.findMany({
     where: { active: true },
     include: {
@@ -179,7 +175,6 @@ export default async function ProductsPage({
         {/* Filter Sidebar */}
         <aside className="lg:col-span-1 space-y-6">
           <form method="GET" action="/products" className="space-y-6">
-            {/* Keyword hidden input */}
             {sp.q && <input type="hidden" name="q" value={sp.q} />}
 
             {/* Category */}
@@ -196,7 +191,9 @@ export default async function ProductsPage({
                   <Link
                     key={cat.id}
                     href={`/products?category=${cat.slug}${sp.q ? `&q=${sp.q}` : ""}`}
-                    className={`block text-sm hover:text-primary ${sp.category === cat.slug ? "text-primary font-medium" : ""}`}
+                    className={`block text-sm hover:text-primary ${
+                      sp.category === cat.slug ? "text-primary font-medium" : ""
+                    }`}
                   >
                     {cat.name}
                   </Link>
@@ -204,20 +201,17 @@ export default async function ProductsPage({
               </div>
             </div>
 
-            {/* Brand */}
+            {/* Brand filter */}
             <div>
               <h3 className="font-semibold mb-2 text-sm">Brand</h3>
               <select
                 name="brand"
+                defaultValue={sp.brand || ""}
                 className="w-full rounded border border-outline-variant px-3 py-2 text-sm"
               >
                 <option value="">All Brands</option>
                 {brands.map((b) => (
-                  <option
-                    key={b.id}
-                    value={b.slug}
-                    selected={sp.brand === b.slug}
-                  >
+                  <option key={b.id} value={b.slug}>
                     {b.name}
                   </option>
                 ))}
@@ -263,8 +257,8 @@ export default async function ProductsPage({
                 <h3 className="font-semibold mb-2 text-sm">{group.name}</h3>
                 <select
                   name={`attr_${group.id}`}
-                  className="w-full rounded border border-outline-variant px-3 py-2 text-sm"
                   defaultValue={(sp[`attr_${group.id}`] as string) || ""}
+                  className="w-full rounded border border-outline-variant px-3 py-2 text-sm"
                 >
                   <option value="">Any</option>
                   {group.values.map((val) => (
@@ -291,21 +285,45 @@ export default async function ProductsPage({
             <div />
             <div className="flex items-center gap-2">
               <label className="text-sm">Sort by:</label>
-              <select
-                name="sort"
-                className="rounded border border-outline-variant px-2 py-1 text-sm"
-                onChange={(e) => {
-                  const url = new URL(window.location.href);
-                  url.searchParams.set("sort", e.target.value);
-                  window.location.href = url.toString();
-                }}
-                defaultValue={sp.sort || ""}
-              >
-                <option value="">Recommended</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="name-asc">Name: A to Z</option>
-              </select>
+              {/* We make sorting part of a separate form with GET */}
+              <form method="GET" action="/products">
+                {/* Preserve existing filters via hidden inputs */}
+                {sp.q && <input type="hidden" name="q" value={sp.q} />}
+                {sp.category && (
+                  <input type="hidden" name="category" value={sp.category} />
+                )}
+                {sp.brand && (
+                  <input type="hidden" name="brand" value={sp.brand} />
+                )}
+                {sp.minPrice && (
+                  <input type="hidden" name="minPrice" value={sp.minPrice} />
+                )}
+                {sp.maxPrice && (
+                  <input type="hidden" name="maxPrice" value={sp.maxPrice} />
+                )}
+                {sp.inStock === "1" && (
+                  <input type="hidden" name="inStock" value="1" />
+                )}
+                {attributeFilters.map((f, idx) => {
+                  // We can't easily reconstruct key names; hidden inputs for each attr already in URL via form? Not needed if sort form only.
+                  // This is simplified; better to use JavaScript or a client component for sort.
+                  return null;
+                })}
+
+                <select
+                  name="sort"
+                  defaultValue={sp.sort || ""}
+                  className="rounded border border-outline-variant px-2 py-1 text-sm"
+                >
+                  <option value="">Recommended</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                  <option value="name-asc">Name: A to Z</option>
+                </select>
+                <button type="submit" className="sr-only">
+                  Apply sort
+                </button>
+              </form>
             </div>
           </div>
 

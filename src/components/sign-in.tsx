@@ -2,7 +2,6 @@
 
 import { signIn } from "../../auth";
 
-
 export function SignIn() {
   return (
     <form
@@ -13,13 +12,13 @@ export function SignIn() {
     >
       <label>
         Email
-        <input name="email" type="email" required />
+        <input name="email" type="email" />
       </label>
       <label>
         Password
-        <input name="password" type="password" required />
+        <input name="password" type="password" />
       </label>
-      <button type="submit">Sign In</button>
+      <button>Sign In</button>
     </form>
   );
 }
