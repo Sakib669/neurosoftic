@@ -1,15 +1,52 @@
 // lib/services/orderAdminService.ts
 import prisma from "@/lib/db";
 
-// Get all orders for admin (with pagination placeholders)
-export async function getAllOrders() {
+// Define filter type
+export type OrderFilters = {
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  customerQuery?: string;
+};
+
+// Get all orders for admin with optional filters
+export async function getAllOrders(filters: OrderFilters = {}) {
+  const where: any = {};
+
+  // Status filter
+  if (filters.status && filters.status !== "ALL") {
+    where.status = filters.status;
+  }
+
+  // Date range filter
+  if (filters.startDate) {
+    where.createdAt = { gte: new Date(filters.startDate) };
+  }
+  if (filters.endDate) {
+    where.createdAt = {
+      ...(where.createdAt || {}),
+      lte: new Date(filters.endDate),
+    };
+  }
+
+  // Customer search (by name or email)
+  if (filters.customerQuery) {
+    where.customer = {
+      OR: [
+        { name: { contains: filters.customerQuery, mode: "insensitive" } },
+        { email: { contains: filters.customerQuery, mode: "insensitive" } },
+      ],
+    };
+  }
+
   return prisma.order.findMany({
+    where,
     orderBy: { createdAt: "desc" },
     include: {
       customer: { select: { name: true, email: true } },
       items: { select: { id: true } },
     },
-    take: 100,
+    take: 200,
   });
 }
 
@@ -25,14 +62,23 @@ export async function getOrderByNumber(orderNumber: string) {
         include: {
           variant: {
             include: {
-              product: { select: { name: true, media: { where: { primary: true }, take: 1 } } },
+              product: {
+                select: {
+                  name: true,
+                  media: { where: { primary: true }, take: 1 },
+                },
+              },
             },
           },
         },
       },
       statusHistory: { orderBy: { createdAt: "desc" } },
       payments: true,
-      shipment: true,
+      shipment: {
+        include: {
+          courierProvider: true, // include provider for shipment info
+        },
+      },
     },
   });
 }
@@ -42,7 +88,7 @@ export async function updateOrderStatus(
   orderId: string,
   newStatus: string,
   actorId?: string,
-  note?: string
+  note?: string,
 ) {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) throw new Error("Order not found");
@@ -72,7 +118,10 @@ export async function updateOrderStatus(
       const items = await tx.orderItem.findMany({ where: { orderId } });
       for (const item of items) {
         await tx.inventory.updateMany({
-          where: { variantId: item.variantId, reserved: { gte: item.quantity } },
+          where: {
+            variantId: item.variantId,
+            reserved: { gte: item.quantity },
+          },
           data: { reserved: { decrement: item.quantity } },
         });
       }
@@ -83,7 +132,10 @@ export async function updateOrderStatus(
       const items = await tx.orderItem.findMany({ where: { orderId } });
       for (const item of items) {
         await tx.inventory.updateMany({
-          where: { variantId: item.variantId, reserved: { gte: item.quantity } },
+          where: {
+            variantId: item.variantId,
+            reserved: { gte: item.quantity },
+          },
           data: {
             reserved: { decrement: item.quantity },
             quantity: { decrement: item.quantity },
