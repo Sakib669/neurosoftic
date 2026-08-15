@@ -3,7 +3,6 @@ import prisma from "@/lib/db";
 import { generateBarcode } from "@/lib/barcode";
 import type { CreateProductInput } from "@/lib/validators/product";
 
-// Helper to get or create attribute value
 async function getOrCreateAttributeValue(groupCode: string, groupName: string, value: string) {
   let group = await prisma.attributeGroup.findUnique({ where: { code: groupCode } });
   if (!group) {
@@ -30,16 +29,12 @@ export async function createProduct(data: CreateProductInput) {
   const existingSku = await prisma.productVariant.findUnique({ where: { sku: data.sku } });
   if (existingSku) throw new Error("SKU already in use");
 
-  // Find category to get prefix
   const category = await prisma.category.findUnique({
     where: { id: data.categoryId },
   });
   const categoryPrefix = category?.prefix || "00";
-
-  // Generate barcode if not provided
   const barcode = data.barcode || await generateBarcode(categoryPrefix, "0000");
 
-  // Find or create default warehouse
   let warehouse = await prisma.warehouse.findFirst({ where: { name: "Main Warehouse" } });
   if (!warehouse) {
     warehouse = await prisma.warehouse.create({ data: { name: "Main Warehouse" } });
@@ -86,7 +81,7 @@ export async function createProduct(data: CreateProductInput) {
 
   const variant = product.variants[0];
 
-  // Attach car attributes if provided
+  // Attach car attributes
   const carAttributes = [
     { code: "year", name: "Year", value: data.year },
     { code: "mileage", name: "Mileage", value: data.mileage },
@@ -95,19 +90,21 @@ export async function createProduct(data: CreateProductInput) {
     { code: "transmission", name: "Transmission", value: data.transmission },
     { code: "drive_type", name: "Drive Type", value: data.driveType },
     { code: "color", name: "Color", value: data.color },
-  ].filter((attr) => attr.value);
+  ].filter((attr) => attr.value !== undefined && attr.value !== null && attr.value !== "");
 
   for (const attr of carAttributes) {
-    const attrValue = await getOrCreateAttributeValue(attr.code, attr.name, attr.value!);
-    await prisma.variantAttribute.create({
-      data: {
-        variantId: variant.id,
-        attributeValueId: attrValue.id,
-      },
-    });
+    if (attr.value) {
+      const attrValue = await getOrCreateAttributeValue(attr.code, attr.name, attr.value);
+      await prisma.variantAttribute.create({
+        data: {
+          variantId: variant.id,
+          attributeValueId: attrValue.id,
+        },
+      });
+    }
   }
 
   return product;
 }
 
-// ... keep updateProduct and updateDefaultVariant from before
+// Keep updateProduct and updateDefaultVariant as before (unchanged)

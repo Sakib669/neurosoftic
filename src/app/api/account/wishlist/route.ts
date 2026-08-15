@@ -8,8 +8,7 @@ import { auth } from "../../../../../auth";
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user?.id)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const items = await getWishlistItems(session.user.id);
   const mapped = items.map((item) => ({
@@ -26,6 +25,9 @@ export async function GET() {
   }));
   return NextResponse.json(mapped);
 }
+
+
+
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();

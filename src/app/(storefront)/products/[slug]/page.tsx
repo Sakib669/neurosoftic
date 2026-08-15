@@ -9,13 +9,11 @@ export default async function ProductDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  // Check if user is logged in (to pass to client for wishlist logic)
   const session = await auth();
   const isLoggedIn = !!session?.user?.id;
 
   const { slug } = await params;
 
-  // Fetch product with all necessary includes
   const product = await prisma.product.findFirst({
     where: { slug, status: "ACTIVE" },
     include: {
@@ -36,7 +34,7 @@ export default async function ProductDetailPage({
 
   if (!product) notFound();
 
-  // Build attribute groups with IDs for variant selection
+  // Build attribute groups for variant selection (still needed for fallback)
   const attributeGroups = new Map<
     string,
     { id: string; name: string; values: { id: string; value: string }[] }
@@ -72,6 +70,8 @@ export default async function ProductDetailPage({
         name: product.name,
         description: product.description,
         shortDescription: product.shortDescription,
+        brandName: product.brand.name,            // ✅ added
+        categoryName: product.category.name,      // ✅ added
         media: product.media.map((m) => ({
           url: m.url,
           altText: m.altText || product.name,
@@ -89,6 +89,7 @@ export default async function ProductDetailPage({
             groupId: a.attributeValue.groupId,
             valueId: a.attributeValue.id,
             value: a.attributeValue.value,
+            groupName: a.attributeValue.group.name,   // ✅ added
           })),
           stock:
             v.inventories?.reduce(

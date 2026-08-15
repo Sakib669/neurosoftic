@@ -20,32 +20,43 @@ type WishlistItem = {
   sku: string;
 };
 
-export default function WishlistPageClient({ isLoggedIn }: { isLoggedIn: boolean }) {
+export default function WishlistPageClient({
+  isLoggedIn,
+}: {
+  isLoggedIn: boolean;
+}) {
   const guestWishlist = useGuestWishlist();
   const { addItem } = useCart();
   const [items, setItems] = useState<WishlistItem[]>([]);
-  const [loading, setLoading] = useState(isLoggedIn); // show loading if logged in
+  const [loading, setLoading] = useState(isLoggedIn);
 
-  // Load wishlist data
   useEffect(() => {
     if (isLoggedIn) {
-      // Fetch from API
       fetch("/api/account/wishlist")
         .then((res) => res.json())
         .then((data) => {
-          // Transform API response to match WishlistItem shape
-          const mapped = data.map((item: any) => ({
-            variantId: item.variantId,
-            productId: item.variant.productId,
-            name: item.variant.product.name,
-            variantName: item.variant.attributes
-              .map((a: any) => a.attributeValue.value)
-              .join(" / "),
-            price: Number(item.variant.price),
-            salePrice: item.variant.salePrice ? Number(item.variant.salePrice) : null,
-            image: item.variant.product.media[0]?.url,
-            sku: item.variant.sku,
-          }));
+          // Defensive mapping – handle both flat and nested shapes
+          const mapped = data.map((item: any) => {
+            const variant = item.variant; // may be undefined
+            return {
+              variantId: item.variantId || variant?.id,
+              productId: item.productId || variant?.productId,
+              name: item.name || variant?.product?.name || "Unknown",
+              variantName:
+                item.variantName ||
+                variant?.attributes
+                  ?.map((a: any) => a.attributeValue?.value)
+                  .join(" / ") ||
+                "",
+              price: Number(item.price ?? variant?.price ?? 0),
+              salePrice:
+                (item.salePrice ?? variant?.salePrice)
+                  ? Number(item.salePrice ?? variant?.salePrice)
+                  : null,
+              image: item.image || variant?.product?.media?.[0]?.url || "",
+              sku: item.sku || variant?.sku || "",
+            };
+          });
           setItems(mapped);
         })
         .catch((err) => {
@@ -54,8 +65,18 @@ export default function WishlistPageClient({ isLoggedIn }: { isLoggedIn: boolean
         })
         .finally(() => setLoading(false));
     } else {
-      // Guest: read from local store
-      setItems(guestWishlist.items);
+      // Guest: map local store items to the same WishlistItem shape
+      const mapped = guestWishlist.items.map((item) => ({
+        variantId: item.variantId,
+        productId: item.productId,
+        name: item.name,
+        variantName: item.variantName,
+        price: item.price,
+        salePrice: item.salePrice,
+        image: item.image,
+        sku: item.sku,
+      }));
+      setItems(mapped);
       setLoading(false);
     }
   }, [isLoggedIn, guestWishlist.items]);
@@ -76,7 +97,7 @@ export default function WishlistPageClient({ isLoggedIn }: { isLoggedIn: boolean
       }
     } else {
       guestWishlist.removeItem(variantId);
-      setItems(guestWishlist.items);
+      setItems((prev) => prev.filter((i) => i.variantId !== variantId));
       toast.add({ title: "Removed from wishlist" });
     }
   }
@@ -105,8 +126,11 @@ export default function WishlistPageClient({ isLoggedIn }: { isLoggedIn: boolean
       <div className="text-center py-16">
         <Heart className="mx-auto h-12 w-12 text-on-surface-variant" />
         <p className="mt-4 text-on-surface-variant">Your wishlist is empty.</p>
-        <Link href="/products" className="mt-2 inline-block text-primary hover:underline">
-          Browse Products
+        <Link
+          href="/products"
+          className="mt-2 inline-block text-primary hover:underline"
+        >
+          Browse Cars
         </Link>
       </div>
     );
@@ -115,10 +139,17 @@ export default function WishlistPageClient({ isLoggedIn }: { isLoggedIn: boolean
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {items.map((item) => (
-        <div key={item.variantId} className="rounded-lg border border-outline-variant overflow-hidden group">
+        <div
+          key={item.variantId}
+          className="rounded-lg border border-outline-variant overflow-hidden group"
+        >
           <div className="relative aspect-[4/5] bg-surface-container">
             {item.image && (
-              <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+              <img
+                src={item.image}
+                alt={item.name}
+                className="h-full w-full object-cover"
+              />
             )}
             <button
               onClick={() => removeItem(item.variantId)}
@@ -128,13 +159,21 @@ export default function WishlistPageClient({ isLoggedIn }: { isLoggedIn: boolean
             </button>
           </div>
           <div className="p-4 space-y-2">
-            <h3 className="font-medium text-on-surface truncate">{item.name}</h3>
-            <p className="text-sm text-on-surface-variant">{item.variantName}</p>
+            <h3 className="font-medium text-on-surface truncate">
+              {item.name}
+            </h3>
+            <p className="text-sm text-on-surface-variant">
+              {item.variantName}
+            </p>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="font-semibold">${(item.salePrice ?? item.price).toFixed(2)}</span>
+                <span className="font-semibold">
+                  ${(item.salePrice ?? item.price).toFixed(2)}
+                </span>
                 {item.salePrice && (
-                  <span className="text-sm text-on-surface-variant line-through">${item.price.toFixed(2)}</span>
+                  <span className="text-sm text-on-surface-variant line-through">
+                    ${item.price.toFixed(2)}
+                  </span>
                 )}
               </div>
               <Button

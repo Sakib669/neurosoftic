@@ -1,4 +1,5 @@
 // app/(storefront)/layout.tsx
+import Footer from "@/components/shared/Footer";
 import { Header } from "@/components/shared/Header";
 
 export default function StorefrontLayout({
@@ -10,9 +11,7 @@ export default function StorefrontLayout({
     <div className="flex flex-col min-h-screen">
       <Header />
       <div className="flex-1">{children}</div>
-      <footer className="border-t py-6 text-center text-sm text-on-surface/60">
-        © 2024 Neurosoftic. All rights reserved.
-      </footer>
+      <Footer />
     </div>
   );
 }

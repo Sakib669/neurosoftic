@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react"; // ✅ import signOut
 import {
   LayoutDashboard,
   Package,
@@ -12,7 +13,7 @@ import {
   LogOut,
   Users,
   BarChart3,
-  History, // ✅ added missing import
+  History,
 } from "lucide-react";
 
 const navItems = [
@@ -22,7 +23,7 @@ const navItems = [
   { href: "/admin/cms", label: "CMS Builder", icon: Globe },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/reports", label: "Reports", icon: BarChart3 },
-  { href: "/admin/audit-logs", label: "Audit Logs", icon: History }, // ✅ now works
+  { href: "/admin/audit-logs", label: "Audit Logs", icon: History },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
@@ -64,7 +65,10 @@ export function Sidebar() {
         >
           View Storefront
         </Link>
-        <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-on-primary-container/10 rounded">
+        <button
+          onClick={() => signOut({ callbackUrl: "/auth/login" })} // ✅ logout action
+          className="w-full flex items-center gap-3 px-3 py-2 hover:bg-on-primary-container/10 rounded"
+        >
           <LogOut size={20} /> Logout
         </button>
       </div>

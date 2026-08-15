@@ -21,10 +21,10 @@ export default async function ProductsPage({
 }) {
   const sp = await searchParams;
 
-  // Build the `where` clause for products
+  // Build the `where` clause for car listings
   const where: any = { status: "ACTIVE" };
 
-  // Keyword search
+  // Keyword search on name/description
   if (sp.q) {
     where.OR = [
       { name: { contains: sp.q, mode: "insensitive" } },
@@ -65,7 +65,7 @@ export default async function ProductsPage({
     };
   }
 
-  // Dynamic attribute filters
+  // Dynamic attribute filters (Year, Mileage, Body Type, etc.)
   const attributeFilters: { valueId: string }[] = [];
   for (const [key, value] of Object.entries(sp)) {
     if (key.startsWith("attr_") && typeof value === "string") {
@@ -88,9 +88,9 @@ export default async function ProductsPage({
   // Sorting
   let orderBy: any = { createdAt: "desc" };
   if (sp.sort === "price-asc") {
-    orderBy = { createdAt: "asc" }; // Will sort in memory for price
+    orderBy = { createdAt: "asc" };
   } else if (sp.sort === "price-desc") {
-    orderBy = { createdAt: "desc" }; // Will sort in memory for price
+    orderBy = { createdAt: "desc" };
   } else if (sp.sort === "name-asc") {
     orderBy = { name: "asc" };
   }
@@ -111,7 +111,7 @@ export default async function ProductsPage({
     take: 100,
   });
 
-  // Map to product cards
+  // Map to product cards (cars)
   let productCards = products.map((p) => {
     const defaultVariant = p.variants[0];
     const inStock =
@@ -151,7 +151,7 @@ export default async function ProductsPage({
     orderBy: { name: "asc" },
   });
 
-  // Fetch attribute groups for dynamic filters
+  // Fetch attribute groups for dynamic filters (Year, Mileage, Body Type, etc.)
   const attributeGroups = await prisma.attributeGroup.findMany({
     where: { active: true },
     include: {
@@ -164,10 +164,10 @@ export default async function ProductsPage({
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-on-surface">
-          {sp.q ? `Search results for "${sp.q}"` : "All Products"}
+          {sp.q ? `Search results for "${sp.q}"` : "Browse Cars"}
         </h1>
         <p className="text-sm text-on-surface-variant mt-1">
-          {productCards.length} product{productCards.length !== 1 && "s"} found
+          {productCards.length} car{productCards.length !== 1 && "s"} found
         </p>
       </div>
 
@@ -179,7 +179,7 @@ export default async function ProductsPage({
 
             {/* Category */}
             <div>
-              <h3 className="font-semibold mb-2 text-sm">Category</h3>
+              <h3 className="font-semibold mb-2 text-sm">Body Type</h3>
               <div className="space-y-1">
                 <Link
                   href="/products"
@@ -248,10 +248,10 @@ export default async function ProductsPage({
                 defaultChecked={sp.inStock === "1"}
                 className="rounded border-outline-variant"
               />
-              <label className="text-sm">In Stock Only</label>
+              <label className="text-sm">Available Only</label>
             </div>
 
-            {/* Dynamic attribute filters */}
+            {/* Dynamic attribute filters (Year, Mileage, Fuel Type, etc.) */}
             {attributeGroups.map((group) => (
               <div key={group.id}>
                 <h3 className="font-semibold mb-2 text-sm">{group.name}</h3>
@@ -285,9 +285,7 @@ export default async function ProductsPage({
             <div />
             <div className="flex items-center gap-2">
               <label className="text-sm">Sort by:</label>
-              {/* We make sorting part of a separate form with GET */}
               <form method="GET" action="/products">
-                {/* Preserve existing filters via hidden inputs */}
                 {sp.q && <input type="hidden" name="q" value={sp.q} />}
                 {sp.category && (
                   <input type="hidden" name="category" value={sp.category} />
@@ -304,11 +302,6 @@ export default async function ProductsPage({
                 {sp.inStock === "1" && (
                   <input type="hidden" name="inStock" value="1" />
                 )}
-                {attributeFilters.map((f, idx) => {
-                  // We can't easily reconstruct key names; hidden inputs for each attr already in URL via form? Not needed if sort form only.
-                  // This is simplified; better to use JavaScript or a client component for sort.
-                  return null;
-                })}
 
                 <select
                   name="sort"
@@ -329,7 +322,7 @@ export default async function ProductsPage({
 
           {productCards.length === 0 ? (
             <p className="text-on-surface-variant">
-              No products found. Try adjusting your filters.
+              No cars found. Try adjusting your filters.
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -343,7 +336,7 @@ export default async function ProductsPage({
                   salePrice={product.salePrice}
                   imageUrl={product.imageUrl}
                   altText={product.altText}
-                  badge={!product.inStock ? "Out of Stock" : undefined}
+                  badge={!product.inStock ? "Sold" : undefined}
                 />
               ))}
             </div>
