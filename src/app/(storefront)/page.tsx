@@ -1,13 +1,40 @@
 // app/(storefront)/page.tsx
-import { getActiveHomepageSections, getFeaturedCategories, getFeaturedProducts } from "@/lib/services/homepageService";
+import {
+  getActiveHomepageSections,
+  getFeaturedCategories,
+  getFeaturedProducts,
+} from "@/lib/services/homepageService";
 import HeroSection from "@/components/storefront/sections/HeroSection";
 import CategoryGrid from "@/components/storefront/sections/CategoryGrid";
 import ProductCarousel from "@/components/storefront/sections/ProductCarousel";
+import { auth } from "../../../auth";
+import { redirect } from "next/navigation";
+
+const ADMIN_ROLES = [
+  "SUPER_ADMIN",
+  "ADMIN",
+  "CATALOG_MANAGER",
+  "INVENTORY_MANAGER",
+  "ORDER_MANAGER",
+  "CUSTOMER_SUPPORT",
+  "MARKETING_MANAGER",
+  "ACCOUNTS",
+];
 
 export default async function HomePage() {
+  const session = await auth();
+  const role = session?.user?.role as string | undefined;
+
+  // If admin, redirect to admin dashboard
+  if (role && ADMIN_ROLES.includes(role)) {
+    redirect("/admin");
+  }
+
+  // Fetch sections and supporting data
   const sections = await getActiveHomepageSections();
   const categories = await getFeaturedCategories();
   const featuredProducts = await getFeaturedProducts();
+
 
   const sectionComponents = [];
 
@@ -21,7 +48,7 @@ export default async function HomePage() {
             title={section.title || undefined}
             subtitle={section.subtitle || undefined}
             config={config}
-          />
+          />,
         );
         break;
       case "category_grid":
@@ -30,7 +57,7 @@ export default async function HomePage() {
             key={section.id}
             title={section.title || undefined}
             categories={categories}
-          />
+          />,
         );
         break;
       case "product_carousel":
@@ -39,7 +66,7 @@ export default async function HomePage() {
             key={section.id}
             title={section.title || undefined}
             products={featuredProducts as any}
-          />
+          />,
         );
         break;
       default:

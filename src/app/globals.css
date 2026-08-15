@@ -5,17 +5,17 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --color-primary: #000666;
-  --color-primary-container: #1a237e;
-  --color-secondary: #505f76;
-  --color-background: #fcf9f8;
-  --color-surface: #fcf9f8;
-  --color-surface-container: #f0eded;
-  --color-on-surface: #1c1b1b;
-  --color-on-primary: #ffffff;
-  --font-heading: var(--font-outfit);
-  --font-body: var(--font-inter);
-  --radius: 0.5rem;
+  --color-primary: var(--color-primary);
+  --color-primary-container: var(--color-primary-container);
+  --color-secondary: var(--color-secondary);
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-surface-container: var(--color-surface-container);
+  --color-on-surface: var(--color-on-surface);
+  --color-on-primary: var(--color-on-primary);
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+  --radius: var(--radius);
   --color-background: ...;
   --color-foreground: ...;
   --color-primary: #0b1c30; /* adjust based on chosen theme */

@@ -15,7 +15,16 @@ export const createProductSchema = z.object({
   sku: z.string().min(1),
   barcode: z.string().optional(),
   status: z.enum(["DRAFT", "ACTIVE", "INACTIVE"]).default("ACTIVE"),
-  mediaUrl: z.string().url().optional(), // primary image URL (we'll simplify)
+  mediaUrl: z.string().url().optional(),
+
+  // Car-specific fields (optional)
+  year: z.string().optional(),
+  mileage: z.string().optional(),
+  bodyType: z.string().optional(),
+  fuelType: z.string().optional(),
+  transmission: z.string().optional(),
+  driveType: z.string().optional(),
+  color: z.string().optional(),
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;

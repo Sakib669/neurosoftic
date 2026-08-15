@@ -30,7 +30,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-primary-container text-on-primary-container h-screen fixed left-0 top-0 p-4">
+    <aside className="hidden md:flex flex-col w-64 bg-primary-container text-white h-screen fixed left-0 top-0 p-4">
       <div className="mb-8">
         <h1 className="text-xl font-bold">Admin Panel</h1>
         <p className="text-sm opacity-70">Enterprise Edition</p>

@@ -7,7 +7,9 @@ export default async function AdminProductsPage() {
     orderBy: { createdAt: "desc" },
     include: {
       media: { where: { primary: true }, take: 1 },
-      variants: { select: { id: true, price: true, salePrice: true, status: true } },
+      variants: {
+        select: { id: true, price: true, salePrice: true, status: true },
+      },
       category: true,
       brand: true,
     },
@@ -22,7 +24,7 @@ export default async function AdminProductsPage() {
           href="/admin/products/new"
           className="rounded-lg bg-primary px-4 py-2 text-on-primary hover:bg-primary-container"
         >
-          Add Product
+          Add Car Listing
         </Link>
       </div>
 
@@ -35,7 +37,9 @@ export default async function AdminProductsPage() {
               <th className="px-4 py-3 text-sm font-medium">Brand</th>
               <th className="px-4 py-3 text-sm font-medium">Price</th>
               <th className="px-4 py-3 text-sm font-medium">Status</th>
-              <th className="px-4 py-3 text-sm font-medium text-right">Actions</th>
+              <th className="px-4 py-3 text-sm font-medium text-right">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant">
@@ -60,7 +64,12 @@ export default async function AdminProductsPage() {
                   <td className="px-4 py-3 text-sm">{product.category.name}</td>
                   <td className="px-4 py-3 text-sm">{product.brand.name}</td>
                   <td className="px-4 py-3 text-sm">
-                    ${defaultVariant ? (defaultVariant.salePrice ?? defaultVariant.price).toString() : "—"}
+                    $
+                    {defaultVariant
+                      ? (
+                          defaultVariant.salePrice ?? defaultVariant.price
+                        ).toString()
+                      : "—"}
                   </td>
                   <td className="px-4 py-3">
                     <span
