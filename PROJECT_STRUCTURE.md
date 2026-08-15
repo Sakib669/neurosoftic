@@ -2,19 +2,30 @@
 
 ## 📋 Project Overview
 
-**Neurosoftic** is a **full-stack e-commerce platform** built with **Next.js 16** (App Router), **Prisma ORM**, **PostgreSQL**, and **NextAuth.js**. It's a comprehensive B2C marketplace with multi-role admin capabilities, inventory management, payments, and shipping integration.
+**Neurosoftic** is a **full-stack, enterprise-grade e-commerce platform** built with **Next.js 16** (App Router), **Prisma ORM**, **PostgreSQL**, and **NextAuth.js v5-beta**. It's a comprehensive B2C marketplace with multi-role admin capabilities (9 roles), advanced inventory management, payment integration, shipping automation, and content management system.
 
 ### Technology Stack
-- **Frontend**: React 19, Next.js 16, TailwindCSS, Shadcn/Base UI
-- **Backend**: Next.js API Routes, Prisma ORM
-- **Database**: PostgreSQL
-- **Authentication**: NextAuth.js 5 (beta), Credentials & OAuth
-- **Payment**: SSLCommerz (Bangladesh payment gateway)
-- **Shipping**: Steadfast (Bangladesh courier)
-- **Media**: Cloudinary
-- **State Management**: Zustand
-- **Validation**: Zod
-- **Forms**: React Hook Form
+- **Framework**: Next.js 16.3.0 (App Router, Server Components)
+- **Frontend**: React 19.2.8, TailwindCSS 4.3.3, Base UI 1.7.0
+- **Backend**: Next.js API Routes, Server Actions
+- **Database**: PostgreSQL + Prisma ORM 7.9.1
+- **Authentication**: NextAuth.js v5.0.0-beta.32 (Credentials, OAuth ready)
+- **State Management**: Zustand 5.0.14
+- **Form Management**: React Hook Form 7.85.0
+- **Data Validation**: Zod 4.4.3
+- **Payment Gateway**: SSLCommerz (Bangladesh)
+- **Shipping Provider**: Steadfast API (Bangladesh courier)
+- **Media Management**: Cloudinary SDK 2.10.0
+- **Charts & Analytics**: Recharts 3.10.1
+- **UI Components**: Shadcn UI (custom integration with Base UI)
+- **HTTP Client**: Axios 1.19.0
+- **Password Hashing**: bcryptjs 3.0.3
+- **Barcode Generation**: bwip-js 4.11.2
+- **PDF Generation**: pdfkit 0.19.1
+- **Query Management**: TanStack React Query 5.101.4
+- **Animation**: Framer Motion 13.1.0
+- **Date Utilities**: date-fns 4.4.0
+- **Database Adapter**: Prisma Adapter for PostgreSQL 7.9.1
 
 ---
 
@@ -23,214 +34,355 @@
 ```
 neurosoftic/
 ├── src/
-│   ├── app/                          # Next.js App Router
-│   │   ├── layout.tsx               # Root layout
-│   │   ├── page.tsx                 # Landing page
-│   │   ├── globals.css              # Global styles
+│   ├── app/                                    # Next.js 16 App Router
+│   │   ├── layout.tsx                         # Root layout wrapper
+│   │   ├── page.tsx                           # Landing/home page
+│   │   ├── globals.css                        # Global TailwindCSS styles
 │   │
-│   │   ├── (storefront)/             # Customer-facing routes (group)
-│   │   │   ├── page.tsx             # Homepage
-│   │   │   ├── cart/                # Shopping cart
-│   │   │   ├── checkout/            # Checkout flow
-│   │   │   ├── products/            # Product listing
-│   │   │   ├── search/              # Search functionality
-│   │   │   └── wishlist/            # Wishlist management
+│   │   ├── (storefront)/                       # Route group: Customer-facing pages
+│   │   │   ├── layout.tsx                     # Storefront layout (Header, Footer)
+│   │   │   ├── page.tsx                       # Storefront homepage
+│   │   │   ├── cart/
+│   │   │   │   └── page.tsx                   # Shopping cart page
+│   │   │   ├── checkout/
+│   │   │   │   └── page.tsx                   # Checkout flow
+│   │   │   ├── products/
+│   │   │   │   ├── page.tsx                   # Product listing with filters
+│   │   │   │   └── [slug]/
+│   │   │   │       └── page.tsx               # Product details page
+│   │   │   ├── search/
+│   │   │   │   └── page.tsx                   # Search results page
+│   │   │   └── wishlist/
+│   │   │       └── page.tsx                   # Wishlist page
 │   │
-│   │   ├── account/                  # Customer account routes (protected)
-│   │   │   ├── page.tsx             # Account dashboard
-│   │   │   ├── profile/             # Profile management
-│   │   │   ├── orders/              # Order history
-│   │   │   │   └── [orderNumber]/   # Order details
-│   │   │   └── address/             # Address management
+│   │   ├── account/                            # Route group: Customer account (Protected)
+│   │   │   ├── layout.tsx                     # Account sidebar layout
+│   │   │   ├── page.tsx                       # Account dashboard
+│   │   │   ├── profile/
+│   │   │   │   └── page.tsx                   # Edit profile
+│   │   │   ├── orders/
+│   │   │   │   ├── page.tsx                   # Order history
+│   │   │   │   └── [orderNumber]/
+│   │   │   │       └── page.tsx               # Order details & tracking
+│   │   │   ├── address/
+│   │   │   │   └── page.tsx                   # Manage addresses
+│   │   │   └── wishlist/
+│   │   │       └── page.tsx                   # Wishlist management
 │   │
-│   │   ├── admin/                    # Admin dashboard (protected)
-│   │   │   ├── page.tsx             # Admin dashboard
-│   │   │   ├── products/            # Product management
-│   │   │   │   ├── page.tsx         # Product list
-│   │   │   │   ├── new/             # Create product
+│   │   ├── admin/                              # Route group: Admin dashboard (Protected)
+│   │   │   ├── layout.tsx                     # Admin sidebar layout
+│   │   │   ├── page.tsx                       # Admin dashboard & KPIs
+│   │   │   ├── products/
+│   │   │   │   ├── page.tsx                   # Product list (table)
+│   │   │   │   ├── new/
+│   │   │   │   │   └── page.tsx               # Create new product
 │   │   │   │   └── [productId]/
-│   │   │   │       ├── edit/        # Edit product
-│   │   │   │       └── variants/    # Manage variants
-│   │   │   ├── orders/              # Order management
-│   │   │   │   └── [orderNumber]/   # Order details
-│   │   │   ├── users/               # User management
-│   │   │   ├── inventory/           # Stock management
-│   │   │   ├── reports/             # Analytics & reports
-│   │   │   ├── audit-logs/          # Audit trail
-│   │   │   ├── cms/                 # CMS (Homepage builder)
-│   │   │   └── settings/            # Theme & branding
+│   │   │   │       ├── page.tsx               # View product
+│   │   │   │       ├── edit/
+│   │   │   │       │   └── page.tsx           # Edit product
+│   │   │   │       └── variants/
+│   │   │   │           └── page.tsx           # Manage variants
+│   │   │   ├── orders/
+│   │   │   │   ├── page.tsx                   # Order management
+│   │   │   │   └── [orderNumber]/
+│   │   │   │       └── page.tsx               # Order fulfillment details
+│   │   │   ├── users/
+│   │   │   │   └── page.tsx                   # User management & roles
+│   │   │   ├── inventory/
+│   │   │   │   └── page.tsx                   # Stock management & adjustments
+│   │   │   ├── reports/
+│   │   │   │   └── page.tsx                   # Sales analytics & KPIs
+│   │   │   ├── audit-logs/
+│   │   │   │   └── page.tsx                   # Admin action audit trail
+│   │   │   ├── cms/
+│   │   │   │   └── page.tsx                   # Homepage content builder
+│   │   │   └── settings/
+│   │   │       └── page.tsx                   # Theme & branding customization
 │   │
-│   │   ├── auth/                     # Authentication
-│   │   │   ├── login/               # Login page
-│   │   │   ├── register/            # Registration
-│   │   │   └── error/               # Auth error
+│   │   ├── auth/                               # Authentication pages
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx                   # Login form
+│   │   │   ├── register/
+│   │   │   │   └── page.tsx                   # Registration form
+│   │   │   └── error/
+│   │   │       └── page.tsx                   # Auth error page
 │   │
-│   │   └── api/                      # REST API Routes
-│   │       ├── auth/                # NextAuth routes
-│   │       ├── account/             # User account endpoints
-│   │       │   ├── profile          # Profile CRUD
-│   │       │   ├── addresses        # Address CRUD
-│   │       │   └── wishlist         # Wishlist endpoints
-│   │       ├── admin/               # Admin-only endpoints
-│   │       │   ├── products         # Product CRUD
-│   │       │   ├── variants         # Variant CRUD
-│   │       │   ├── orders           # Order management
-│   │       │   ├── users            # User management
-│   │       │   ├── inventory        # Stock adjustment
-│   │       │   └── theme            # Theme configuration
-│   │       ├── orders/              # Order endpoints
-│   │       │   └── [orderId]/shipment
-│   │       ├── payment/             # Payment endpoints
-│   │       │   ├── initiate         # Start payment
-│   │       │   └── callback         # Payment webhook
-│   │       ├── search/              # Full-text search
-│   │       └── upload/              # File upload
+│   │   └── api/                                # REST API Routes
+│   │       ├── auth/
+│   │       │   └── [...nextauth]/
+│   │       │       └── route.ts               # NextAuth endpoints (login, callback, logout)
+│   │       │
+│   │       ├── account/                       # Customer account endpoints (Protected)
+│   │       │   ├── profile/
+│   │       │   │   ├── route.ts               # GET/PATCH profile
+│   │       │   │   └── [...methods]/          # Explicit method handlers
+│   │       │   ├── addresses/
+│   │       │   │   ├── route.ts               # GET/POST addresses
+│   │       │   │   └── [id]/
+│   │       │   │       └── route.ts           # PATCH/DELETE address
+│   │       │   └── wishlist/
+│   │       │       ├── route.ts               # GET/POST/DELETE wishlist
+│   │       │       └── [variantId]/
+│   │       │           └── route.ts           # Toggle wishlist item
+│   │       │
+│   │       ├── admin/                         # Admin-only endpoints (Protected)
+│   │       │   ├── users/
+│   │       │   │   └── route.ts               # GET/PATCH users, update roles
+│   │       │   ├── products/
+│   │       │   │   ├── route.ts               # GET/POST products
+│   │       │   │   └── [id]/
+│   │       │   │       ├── route.ts           # PATCH/DELETE product
+│   │       │   │       └── variants/
+│   │       │   │           └── route.ts       # POST variant
+│   │       │   ├── variants/
+│   │       │   │   └── [id]/
+│   │       │   │       └── route.ts           # PATCH/DELETE variant
+│   │       │   ├── orders/
+│   │       │   │   ├── route.ts               # GET orders
+│   │       │   │   └── [id]/
+│   │       │   │       ├── status/
+│   │       │   │       │   └── route.ts       # PATCH order status
+│   │       │   │       └── shipment/
+│   │       │   │           └── route.ts       # POST create shipment
+│   │       │   ├── inventory/
+│   │       │   │   ├── route.ts               # GET inventory
+│   │       │   │   └── [id]/
+│   │       │   │       └── route.ts           # PATCH adjust stock
+│   │       │   ├── theme/
+│   │       │   │   └── route.ts               # GET/PATCH/POST theme config
+│   │       │   ├── audit-logs/
+│   │       │   │   └── route.ts               # GET audit logs
+│   │       │   └── reports/
+│   │       │       └── route.ts               # GET analytics data
+│   │       │
+│   │       ├── orders/
+│   │       │   ├── route.ts                   # POST create order
+│   │       │   └── [id]/
+│   │       │       └── route.ts               # GET order (protected)
+│   │       │
+│   │       ├── payment/
+│   │       │   ├── initiate/
+│   │       │   │   └── route.ts               # POST start payment (SSLCommerz)
+│   │       │   └── callback/
+│   │       │       └── route.ts               # POST payment webhook (SSLCommerz callback)
+│   │       │
+│   │       ├── search/
+│   │       │   └── route.ts                   # GET/POST full-text search
+│   │       │
+│   │       └── upload/
+│   │           └── route.ts                   # POST file upload (Cloudinary)
 │   │
-│   ├── components/                   # Reusable React components
-│   │   ├── ui/                      # Shadcn UI components
-│   │   │   ├── button.tsx
-│   │   │   ├── input.tsx
-│   │   │   ├── dialog.tsx
-│   │   │   ├── dropdown-menu.tsx
-│   │   │   ├── toast.tsx
-│   │   │   ├── table.tsx
-│   │   │   ├── tabs.tsx
-│   │   │   ├── card.tsx
-│   │   │   └── ... (20+ UI primitives)
+│   ├── components/                             # Reusable React Components
 │   │   │
-│   │   ├── admin/                   # Admin-specific components
-│   │   │   ├── Sidebar.tsx          # Admin navigation
-│   │   │   ├── ProductForm.tsx      # Product creation/edit
-│   │   │   ├── ImageUpload.tsx      # Image upload widget
-│   │   │   └── EditProductForm.tsx  # Edit form variant
+│   │   ├── ui/                                # Shadcn UI base components (20+)
+│   │   │   ├── accordion.tsx                  # Collapsible sections
+│   │   │   ├── avatar.tsx                     # User avatars
+│   │   │   ├── badge.tsx                      # Labels & tags
+│   │   │   ├── button.tsx                     # CTAs
+│   │   │   ├── card.tsx                       # Container
+│   │   │   ├── checkbox.tsx                   # Checkbox input
+│   │   │   ├── dialog.tsx                     # Modal dialog
+│   │   │   ├── dropdown-menu.tsx              # Dropdown actions
+│   │   │   ├── input.tsx                      # Text input
+│   │   │   ├── label.tsx                      # Form label
+│   │   │   ├── select.tsx                     # Dropdown select
+│   │   │   ├── separator.tsx                  # Visual divider
+│   │   │   ├── sheet.tsx                      # Side drawer
+│   │   │   ├── skeleton.tsx                   # Loading placeholder
+│   │   │   ├── slider.tsx                     # Range slider
+│   │   │   ├── switch.tsx                     # Toggle switch
+│   │   │   ├── table.tsx                      # Data table
+│   │   │   ├── tabs.tsx                       # Tab navigation
+│   │   │   └── toast.tsx                      # Notification toast
 │   │   │
-│   │   ├── shared/                  # Shared components
-│   │   │   ├── Header.tsx           # Top navigation
-│   │   │   ├── CartIcon.tsx         # Cart badge
-│   │   │   ├── WishlistIcon.tsx     # Wishlist badge
-│   │   │   ├── CartView.tsx         # Cart drawer/modal
-│   │   │   └── SignOutButton.tsx    # Logout button
+│   │   ├── admin/                             # Admin-specific components
+│   │   │   ├── Sidebar.tsx                    # Admin navigation with role-based menu
+│   │   │   ├── ProductForm.tsx                # Create/edit product form (wrapper)
+│   │   │   ├── ImageUpload.tsx                # Cloudinary image uploader
+│   │   │   └── EditProductForm.tsx            # Product edit form variant
 │   │   │
-│   │   ├── storefront/              # Storefront components
-│   │   │   ├── ProductCard.tsx      # Product tile
-│   │   │   └── sections/            # Homepage sections
-│   │   │       ├── HeroSection.tsx
-│   │   │       ├── CategoryGrid.tsx
-│   │   │       └── ProductCarousel.tsx
+│   │   ├── shared/                            # Shared across storefront & account
+│   │   │   ├── Header.tsx                     # Top navigation bar with search
+│   │   │   ├── CartIcon.tsx                   # Cart badge (mini cart trigger)
+│   │   │   ├── WishlistIcon.tsx               # Wishlist heart icon
+│   │   │   ├── CartView.tsx                   # Cart drawer/modal content
+│   │   │   ├── SignOutButton.tsx              # Logout button
+│   │   │   └── Footer.tsx                     # Footer with links
 │   │   │
-│   │   └── sign-in.tsx              # Sign-in form
+│   │   ├── storefront/                        # Customer-facing components
+│   │   │   ├── ProductCard.tsx                # Product tile/card
+│   │   │   └── sections/                      # Homepage section components
+│   │   │       ├── HeroSection.tsx            # Banner/hero
+│   │   │       ├── CategoryGrid.tsx           # Category showcase
+│   │   │       └── ProductCarousel.tsx        # Product slider
+│   │   │
+│   │   └── sign-in.tsx                        # Sign-in form component
 │   │
-│   ├── lib/                         # Utility functions & services
-│   │   ├── db.ts                    # Prisma client instance
-│   │   ├── utils.ts                 # Helper utilities (classnames, etc)
-│   │   ├── hash.ts                  # Password hashing
-│   │   ├── password.ts              # Password verification
-│   │   ├── barcode.ts               # Barcode generation
-│   │   ├── cloudinary.ts            # Cloudinary integration
-│   │   ├── zod.ts                   # Zod schema utilities
+│   ├── lib/                                   # Utility functions & business logic
+│   │   ├── db.ts                              # Prisma client singleton
+│   │   ├── utils.ts                           # Helper utilities (classNames, formatting)
+│   │   ├── hash.ts                            # Password hashing (bcryptjs)
+│   │   ├── password.ts                        # Password verification
+│   │   ├── barcode.ts                         # Barcode generation (bwip-js)
+│   │   ├── cloudinary.ts                      # Cloudinary SDK initialization
+│   │   ├── theme.ts                           # Theme utilities
+│   │   ├── zod.ts                             # Zod schema utilities
 │   │   │
-│   │   ├── actions/                 # Server Actions
-│   │   │   └── auth.ts              # Auth server actions (registration)
+│   │   ├── actions/                           # Server Actions
+│   │   │   └── auth.ts                        # Auth server actions (registration, login)
 │   │   │
-│   │   ├── services/                # Business logic layer
-│   │   │   ├── adminService.ts      # Admin operations (users, stats, etc)
-│   │   │   ├── productService.ts    # Product CRUD & creation
-│   │   │   ├── variantService.ts    # Product variant management
-│   │   │   ├── inventoryService.ts  # Stock management
-│   │   │   ├── orderService.ts      # Order operations
-│   │   │   ├── orderAdminService.ts # Admin order view
-│   │   │   ├── customerService.ts   # Customer profile & addresses
-│   │   │   ├── paymentService.ts    # Payment processing
-│   │   │   ├── courierService.ts    # Shipping integration
-│   │   │   ├── searchService.ts     # Full-text search
-│   │   │   ├── reportService.ts     # Analytics & reports
-│   │   │   ├── auditService.ts      # Audit logging
-│   │   │   ├── cmsService.ts        # Homepage sections
-│   │   │   ├── themeService.ts      # Theme configuration
-│   │   │   ├── wishlistService.ts   # Wishlist operations
-│   │   │   └── homepageService.ts   # Homepage data
+│   │   ├── services/                          # Business logic layer (16 services)
+│   │   │   ├── adminService.ts                # Admin operations (users, stats, dashboard)
+│   │   │   ├── productService.ts              # Product CRUD & creation
+│   │   │   ├── variantService.ts              # Product variant management
+│   │   │   ├── inventoryService.ts            # Stock management & adjustments
+│   │   │   ├── orderService.ts                # Order creation & customer operations
+│   │   │   ├── orderAdminService.ts           # Order management (admin view/fulfillment)
+│   │   │   ├── customerService.ts             # Customer profile & address operations
+│   │   │   ├── paymentService.ts              # Payment processing & webhooks
+│   │   │   ├── courierService.ts              # Shipping integration & tracking
+│   │   │   ├── searchService.ts               # Full-text product search
+│   │   │   ├── reportService.ts               # Analytics & KPI aggregation
+│   │   │   ├── auditService.ts                # Admin action logging
+│   │   │   ├── cmsService.ts                  # Homepage sections management
+│   │   │   ├── themeService.ts                # Theme configuration CRUD
+│   │   │   ├── wishlistService.ts             # Wishlist operations
+│   │   │   └── homepageService.ts             # Homepage data aggregation
 │   │   │
-│   │   ├── providers/               # Third-party integrations
-│   │   │   ├── paymentProvider.ts   # Payment gateway interface
-│   │   │   ├── sslcommerz.ts        # SSLCommerz implementation
-│   │   │   ├── courierProvider.ts   # Courier interface
-│   │   │   └── steadfast.ts         # Steadfast implementation
+│   │   ├── providers/                         # Third-party integrations
+│   │   │   ├── paymentProvider.ts             # Payment gateway interface (abstract)
+│   │   │   ├── sslcommerz.ts                  # SSLCommerz implementation
+│   │   │   ├── courierProvider.ts             # Courier interface (abstract)
+│   │   │   └── steadfast.ts                   # Steadfast API implementation
 │   │   │
-│   │   ├── validators/              # Zod validation schemas
-│   │   │   └── product.ts           # Product validation
+│   │   ├── validators/                        # Zod validation schemas
+│   │   │   └── product.ts                     # Product & variant validation
 │   │   │
-│   │   └── store/                   # Client-side state (Zustand)
-│   │       ├── cart.ts              # Cart store (persisted)
-│   │       └── wishlist.ts          # Wishlist store (persisted)
+│   │   └── store/                             # Client-side state (Zustand)
+│   │       ├── cart.ts                        # Cart store (persisted to localStorage)
+│   │       └── wishlist.ts                    # Guest wishlist store (persisted)
 │   │
-│   └── generated/                   # Generated files
-│       └── prisma/                  # Prisma client
+│   └── generated/                             # Auto-generated files
+│       └── prisma/
+│           ├── browser.ts                     # Prisma client for browser
+│           ├── client.ts                      # Prisma client for Node.js
+│           ├── commonInputTypes.ts            # Input type definitions
+│           ├── enums.ts                       # Database enums
+│           ├── models.ts                      # Model type definitions
+│           ├── internal/                      # Prisma internals
+│           └── models/                        # Model-specific types
 │
 ├── prisma/
-│   ├── schema.prisma                # Database schema
-│   ├── seed.ts                      # Database seeding
-│   └── migrations/                  # Database migrations
+│   ├── schema.prisma                          # Complete database schema (19 core models + 5 supporting)
+│   ├── seed.ts                                # Database seeding script
+│   ├── car-seed.ts                            # Car/product demo data
+│   └── migrations/
+│       ├── migration_lock.toml                # Migration lock file
+│       ├── 20260812192233_init/
+│       │   └── migration.sql                  # Initial schema migration
+│       └── 20260814111826_add_search_index/
+│           └── migration.sql                  # Full-text search index migration
 │
-├── public/                          # Static assets
-├── package.json                     # Dependencies
-├── tsconfig.json                    # TypeScript config
-├── next.config.ts                   # Next.js config
-├── postcss.config.mjs               # PostCSS config
-├── tailwind.config.mjs              # Tailwind config
-├── eslint.config.mjs                # ESLint config
-├── components.json                  # Shadcn config
-├── auth.ts                          # NextAuth configuration
-└── README.md
-
+├── public/                                    # Static assets
+│   └── [Static files, favicons, etc.]
+│
+├── Configuration Files
+├── package.json                               # NPM dependencies & scripts
+├── tsconfig.json                              # TypeScript configuration
+├── next.config.ts                             # Next.js configuration
+├── auth.ts                                    # NextAuth.js configuration (Credentials & OAuth)
+├── postcss.config.mjs                         # PostCSS configuration
+├── tailwind.config.mjs                        # TailwindCSS v4 configuration
+├── eslint.config.mjs                          # ESLint configuration
+├── components.json                            # Shadcn component registry
+├── prisma.config.ts                           # Prisma client options
+├── proxy.ts                                   # Proxy configuration (if needed)
+├── .env.local                                 # Environment variables (not tracked)
+├── .gitignore
+│
+├── Documentation
+├── PROJECT_STRUCTURE.md                       # This file
+├── README.md                                  # Project README
+├── AGENTS.md                                  # Custom agent definitions
+└── CLAUDE.md                                  # Claude model preferences
 ```
+
+### Key Structural Decisions
+
+1. **App Router with Route Groups**: Using Next.js 16 route groups `(storefront)`, `(admin)`, `(account)` for better organization
+2. **API Routes Organization**: Nested routes following resource hierarchy `/api/[resource]/[id]/[action]`
+3. **Service Layer Pattern**: Business logic isolated in services, reusable across API routes
+4. **Provider Pattern**: Third-party integrations abstracted behind interfaces (PaymentProvider, CourierProvider)
+5. **Zustand for State**: Client-side cart and wishlist with localStorage persistence
+6. **Prisma Transactions**: Multi-step operations (order creation, inventory reservation) wrapped in transactions
+7. **Type Safety**: Full TypeScript coverage with Zod validation at API boundaries
 
 ---
 
 ## 🗄️ Database Schema
 
-### Core Entities
+### Complete Entity List (19 Core Models + 5 Supporting Models)
 
-#### 1. **Users & Authentication**
-- `User` → Customer/Admin with roles (SUPER_ADMIN, ADMIN, CATALOG_MANAGER, etc.)
-- `Account` → OAuth/social login accounts
-- `Session` → Session management
+#### 1. **Users, Authentication & Authorization (3 Models)**
+- `User` → Customer/Admin with 9 roles (SUPER_ADMIN, ADMIN, CATALOG_MANAGER, INVENTORY_MANAGER, ORDER_MANAGER, CUSTOMER_SUPPORT, MARKETING_MANAGER, ACCOUNTS, CUSTOMER)
+- `Account` → OAuth/credentials authentication records
+- `Session` → Session management for authenticated users
 
-#### 2. **Products & Inventory**
-- `Product` → Main product entity (name, description, status)
-- `ProductVariant` → SKU, pricing, variants (size, color, etc)
-- `ProductAttribute` → Links variants to attribute values
-- `AttributeGroup` → Groups (Size, Color, etc)
-- `AttributeValue` → Individual values (S, M, L or Red, Blue)
-- `Media` → Product images/videos
-- `Inventory` → Stock quantity per variant per warehouse
-- `InventoryMovement` → Stock adjustment history
-- `Category` → Product categories
-- `Brand` → Brand information
+#### 2. **Customer Profile & Addresses (2 Models)**
+- `CustomerProfile` → Extended customer info with default address
+- `Address` → Saved addresses (shipping/billing, default selection)
 
-#### 3. **Orders & Payments**
-- `Order` → Main order (customer, total, status, dates)
-- `OrderItem` → Individual items in order
-- `OrderAddress` → Shipping & billing addresses
-- `OrderStatusHistory` → Status changes with timestamps
-- `Payment` → Payment records (method, amount, status)
-- `Shipment` → Courier shipment tracking
+#### 3. **Catalog: Categories, Brands, Collections (3 Models)**
+- `Category` → Hierarchical categories with parent-child relations, 2-digit prefix for barcodes
+- `Brand` → Brand information with logo and description
+- `Collection` → Time-based collections with date range support
 
-#### 4. **Customer**
-- `CustomerProfile` → Extended customer info
-- `Address` → Saved addresses (default, multiple)
-- `Review` → Product reviews
-- `CartItem` → Cart contents
-- `WishlistItem` → Wishlist items
+#### 4. **Products, Variants & Media (5 Models)**
+- `Product` → Main product entity (name, description, status, SEO fields)
+- `ProductVariant` → SKU-based variants with individual pricing (regular, sale, cost), weight, barcode
+- `ProductTag` → Flexible tagging system for products
+- `ProductCollection` → Junction table for product-collection relationships
+- `Media` → Product images/videos with Cloudinary URLs, mobile optimization support
+- `VariantMedia` → Junction table linking variants to specific media
 
-#### 5. **CMS & Configuration**
-- `HomepageSection` → Dynamic homepage sections
-- `ThemeConfig` → Customizable theme settings
+#### 5. **Attributes & Variants Association (3 Models)**
+- `AttributeGroup` → Attribute categories (Size, Color, Material, etc.)
+- `AttributeValue` → Individual attribute values (S, M, L; Red, Blue; etc.)
+- `VariantAttribute` → Junction table linking variants to attribute values
 
-#### 6. **Admin & Audit**
-- `AuditLog` → All admin actions logged
-- `Notification` → User notifications
-- `Warehouse` → Inventory warehouses
-- `CourierProvider` → Shipping providers
+#### 6. **Inventory & Warehouses (3 Models)**
+- `Warehouse` → Multiple warehouse support for stock distribution
+- `Inventory` → Stock tracking per variant per warehouse (quantity, reserved, reorder level)
+- `InventoryMovement` → Complete audit trail of all stock adjustments
+
+#### 7. **Orders, Payments & Shipments (6 Models)**
+- `Order` → Main order entity (order number, status, payment status, totals, dates)
+- `OrderItem` → Individual order line items with snapshot pricing
+- `OrderStatusHistory` → Complete order state transition history
+- `Payment` → Payment records with provider, transaction ID, metadata
+- `CourierProvider` → Shipping provider configuration (Steadfast, Pathao, etc.)
+- `Shipment` → Courier shipment tracking with consignment ID and tracking number
+
+#### 8. **Reviews, Ratings & Notifications (2 Models)**
+- `Review` → Product reviews with 1-5 rating, verified purchase flag, images
+- `Notification` → User notifications (order status, promotions, alerts)
+
+#### 9. **Cart & Wishlist (2 Models)**
+- `CartItem` → Persisted shopping cart items (database backup to localStorage)
+- `WishlistItem` → Wishlist items linked to CustomerProfile
+
+#### 10. **Promotions & Coupons (1 Model)**
+- `Coupon` → Promotional codes with type (PERCENTAGE, FIXED_AMOUNT, FREE_SHIPPING), usage limits, date ranges
+
+#### 11. **CMS & Content Management (3 Models)**
+- `HomepageSection` → Dynamic homepage sections (hero, category_grid, product_carousel) with JSON config
+- `ThemeConfig` → Customizable theme settings (colors, fonts, border radius) stored as JSON
+- `Menu` → Navigation menu items stored as JSON array
+- `CMSPage` → Static content pages (about, privacy policy, T&C) with SEO fields
+
+#### 12. **Audit & Logging (2 Models)**
+- `AuditLog` → Complete audit trail of all admin actions (user, action type, entity, metadata)
+- `WebhookLog` → Incoming webhook logs from payment and courier providers
 
 ---
 
@@ -638,119 +790,492 @@ Displays KPI cards, charts
 
 ---
 
-## 📡 API Routes Summary
+## 📡 API Routes Summary (25+ Endpoints)
+
+### Authentication Routes
+| Route | Method | Purpose | Protection |
+|-------|--------|---------|-----------|
+| `/api/auth/[...nextauth]` | GET/POST | NextAuth callback, login, logout | Public |
 
 ### Public/Customer Routes
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/search` | POST | Full-text product search |
-| `/api/upload` | POST | Image upload to Cloudinary |
-| `/api/payment/initiate` | POST | Start SSLCommerz payment |
-| `/api/payment/callback` | POST | Payment webhook handler |
-| `/api/orders/[id]` | GET | Get order details (protected) |
+| Route | Method | Purpose | Protection |
+|-------|--------|---------|-----------|
+| `/api/search` | GET/POST | Full-text product search | Public |
+| `/api/upload` | POST | Image upload to Cloudinary | Public |
+| `/api/orders/[id]` | GET | Get order details | Protected (Customer) |
+| `/api/payment/initiate` | POST | Start SSLCommerz payment | Protected (Customer) |
+| `/api/payment/callback` | POST | Payment webhook handler | Verified Signature |
 
-### Customer Account Routes (Protected - /account/**)
+### Customer Account Routes (Protected)
 | Route | Method | Purpose |
 |-------|--------|---------|
-| `/api/account/profile` | GET/PATCH | View/update profile |
-| `/api/account/addresses` | GET/POST | Get/create addresses |
+| `/api/account/profile` | GET/PATCH | View/update customer profile |
+| `/api/account/addresses` | GET/POST | List/create addresses |
 | `/api/account/addresses/[id]` | PATCH/DELETE | Update/delete address |
-| `/api/account/wishlist` | GET/POST/DELETE | Wishlist operations |
+| `/api/account/wishlist` | GET/POST/DELETE | Get/add/remove wishlist items |
+| `/api/account/wishlist/[variantId]` | POST/DELETE | Toggle single wishlist item |
 
-### Admin Routes (Protected - /admin/**)
+### Admin Routes (Protected - Role-based)
 | Route | Method | Purpose |
 |-------|--------|---------|
-| `/api/admin/users` | GET/PATCH | User management |
-| `/api/admin/products` | GET/POST | Product CRUD |
+| `/api/admin/users` | GET/PATCH | Get all users / update user role |
+| `/api/admin/products` | GET/POST | List products / create new product |
 | `/api/admin/products/[id]` | PATCH/DELETE | Update/delete product |
-| `/api/admin/products/[id]/variants` | POST | Add variant |
+| `/api/admin/products/[id]/variants` | POST | Add variant to product |
 | `/api/admin/variants/[id]` | PATCH/DELETE | Update/delete variant |
-| `/api/admin/inventory` | GET/PATCH | Stock management |
-| `/api/admin/orders` | GET | All orders (filtered) |
+| `/api/admin/inventory` | GET/PATCH | View inventory / adjust stock |
+| `/api/admin/inventory/[id]` | PATCH | Adjust stock with reason |
+| `/api/admin/orders` | GET | List all orders (filtered, paginated) |
 | `/api/admin/orders/[id]/status` | PATCH | Update order status |
-| `/api/admin/orders/[id]/shipment` | POST | Create shipment |
-| `/api/admin/theme` | GET/PATCH/POST | Theme CRUD & reset |
-| `/api/admin/audit-logs` | GET | Audit trail |
+| `/api/admin/orders/[id]/shipment` | POST | Create shipment with courier |
+| `/api/admin/theme` | GET/PATCH/POST | Get/update/reset theme config |
+| `/api/admin/audit-logs` | GET | View admin action audit trail |
+| `/api/admin/reports` | GET | Get sales analytics & KPIs |
+
+### Request/Response Flow
+- All routes validate authentication via NextAuth session
+- Admin routes additionally validate user role (SUPER_ADMIN, ADMIN, CATALOG_MANAGER, etc.)
+- Request validation via Zod schemas at API boundary
+- Error responses follow standard format with HTTP status codes
+- Responses include metadata (timestamps, pagination, etc.)
 
 ---
 
 ## 🔐 Authentication & Authorization
 
-**Method**: NextAuth.js 5 (beta)
+### NextAuth.js Configuration (v5.0.0-beta.32)
 
-**Providers:**
-- Credentials (email + password)
-- OAuth ready (Google, Facebook, etc.)
+**Session Strategy**: JWT (JSON Web Token)
+- Session stored in JWT token
+- Database sessions via Prisma Adapter
+- Auto-refresh token management
+- Expires at configurable interval
 
-**Session Handling:**
-- Database sessions stored in `Session` table
-- User roles: 9 roles (SUPER_ADMIN, ADMIN, CATALOG_MANAGER, etc.)
+**Providers Implemented:**
+1. **Credentials Provider** (Email + Password)
+   - Email/password validation via Zod
+   - Password hashing with bcryptjs
+   - User lookup from PostgreSQL
+   - Password verification on login
 
-**Middleware Protection:**
-- Customer routes: Check `session?.user?.id`
-- Admin routes: Check `session?.user?.role` includes admin privilege
+2. **OAuth Providers** (Ready to implement)
+   - Google OAuth support enabled
+   - Facebook OAuth support enabled
+   - Other providers easily configurable
+
+**User Roles (9 Tiers):**
+- `SUPER_ADMIN` → Full system access
+- `ADMIN` → Full admin access
+- `CATALOG_MANAGER` → Product & inventory management
+- `INVENTORY_MANAGER` → Stock management only
+- `ORDER_MANAGER` → Order management & fulfillment
+- `CUSTOMER_SUPPORT` → Customer service access
+- `MARKETING_MANAGER` → CMS & promotions
+- `ACCOUNTS` → Financial & reporting
+- `CUSTOMER` → Customer/shopper (default)
+
+**Session Flow:**
+```
+Login Request
+    ↓
+/api/auth/signin (NextAuth endpoint)
+    ↓
+Credentials Provider validates email/password
+    ↓
+User lookup in database
+    ↓
+Password verification (bcryptjs)
+    ↓
+JWT token created with user data
+    ↓
+Session cookie set (httpOnly, secure)
+    ↓
+Redirect to /dashboard or referrer
+```
+
+**Authentication Middleware:**
+- All API routes check `auth()` at handler start
+- Admin routes additionally check user role
 - Redirect to `/auth/login` if not authenticated
+- Role validation prevents unauthorized access
+
+**Security Features:**
+- Passwords hashed with bcryptjs
+- CSRF protection via NextAuth
+- Secure session cookies (httpOnly, sameSite)
+- JWT token validation on every request
+- Role-based access control (RBAC) at API level
+- Audit logging of all sensitive operations
 
 ---
 
 ## 🚀 Key Features & How They Connect
 
-### 1. **Multi-Role Access Control**
-- Roles defined in Prisma: SUPER_ADMIN, ADMIN, CATALOG_MANAGER, etc.
-- API routes validate user role before allowing access
+### 1. **Multi-Role Access Control (9 Roles)**
+- Roles defined in Prisma enum
+- API middleware validates role on every admin request
 - Admin sidebar dynamically shows/hides menu items based on role
+- Fine-grained permissions: CATALOG_MANAGER can't access financial reports
+- Audit trail logs role changes and sensitive actions
 
-### 2. **Product Variants & Attributes**
-- One Product can have many Variants (SKU-based)
-- Each Variant can have multiple Attributes (Size, Color, etc.)
-- Inventory tracked per Variant per Warehouse
-- Pricing can differ per variant (regular price vs. sale price)
+### 2. **Product Catalog & Variants (SKU-based)**
+- One Product can have unlimited Variants (different SKUs)
+- Each Variant has individual pricing: regular, sale, cost
+- Variants linked to AttributeGroups (Size, Color, etc.)
+- Product lifecycle: DRAFT → PENDING → ACTIVE → INACTIVE → ARCHIVED
+- Media handling: Primary image, multiple images, mobile-optimized URLs
+- Barcode generation: Category prefix + sequential number
 
-### 3. **Order Lifecycle**
-- Status progression: PENDING_PAYMENT → CONFIRMED → PROCESSING → PACKED → READY_FOR_PICKUP → SHIPPED → DELIVERED
-- Each status change creates OrderStatusHistory entry
-- Inventory is "reserved" when order created, released when cancelled
-- Full audit trail of all changes
+### 3. **Order Lifecycle (14 Status Stages)**
+```
+DRAFT → PENDING_PAYMENT → CONFIRMED → PROCESSING → PACKED 
+→ READY_FOR_PICKUP → SHIPPED → IN_TRANSIT → OUT_FOR_DELIVERY 
+→ DELIVERED OR CANCELLED/RETURNED/REFUNDED/PAYMENT_FAILED
+```
+- Each status change creates OrderStatusHistory record
+- Inventory reserved at order creation, released if cancelled
+- Full audit trail: who changed status, when, from what to what
+- Supports partial fulfillment and returns
 
-### 4. **Inventory Management**
-- Two-part system: Inventory.quantity (total) + Inventory.reserved (allocated to orders)
-- InventoryMovement tracks all adjustments (reasons: restock, damage, order fulfillment, etc.)
-- Low stock alerts on admin dashboard
-- Automatic generation of barcodes for tracking
+### 4. **Advanced Inventory Management**
+- Two-part tracking: `quantity` (total) + `reserved` (allocated)
+- Multi-warehouse support with location-based stock
+- Automatic barcode generation per variant
+- Reorder levels and low-stock alerts
+- Complete InventoryMovement audit trail (reason, reference ID)
+- Supports reasons: order_placed, restock, adjustment, return, damage, etc.
 
-### 5. **Payment Integration**
-- SSLCommerz API integration for online payments
-- Supports COD (Cash on Delivery) for unpaid orders
-- Webhook callback to handle payment success/failure
-- Payment records tracked in Payment table
+### 5. **Payment Integration (SSLCommerz + COD)**
+- **SSLCommerz API Integration** for online payments
+- Card payments: Visa, MasterCard, AmEx
+- Mobile wallet: bKash, Nagad, Rocket
+- **Cash on Delivery (COD)** for offline payments
+- Webhook callback handling for payment status updates
+- Transaction ID tracking and verification
+- Payment records with provider, amount, status, metadata
+- Supports partial & refunded payments
 
-### 6. **Shipping Integration**
-- Steadfast API integration for courier shipments
+### 6. **Shipping Integration (Steadfast + Extensible)**
+- **Steadfast API integration** for Bangladesh couriers
 - Automatic consignment creation with tracking number
-- Supports multiple courier providers (extensible)
-- Order status auto-updated to READY_FOR_PICKUP
+- Multiple courier provider support (extensible)
+- Shipment status tracking
+- Webhook handling for delivery updates
+- CourierProvider configuration table for multi-provider support
 
-### 7. **Client-Side Caching**
-- Cart: Zustand store + localStorage (no server state)
-- Wishlist: Guest wishlist in localStorage, logged-in wishlist in DB
-- Automatic sync on login
-
-### 8. **Full-Text Search**
-- PostgreSQL native full-text search (plainto_tsquery)
-- Searches product name, description, shortDescription
+### 7. **Search & Discovery**
+- **PostgreSQL full-text search** (plainto_tsquery)
+- Searches: product name, description, shortDescription, tags
 - Ranked results by relevance
-- Max 50 results
+- Max 50 results per search
+- Instant search via `/api/search`
 
-### 9. **CMS (Homepage Builder)**
-- Dynamic homepage sections stored in DB
-- Supported section types: hero, category_grid, product_carousel
+### 8. **CMS & Homepage Builder**
+- Dynamic homepage sections stored in database
+- Section types: hero, category_grid, product_carousel
 - Sortable sections for custom layout
-- Theme customization (colors, fonts, border radius)
+- Time-based sections: startDate, endDate
+- Theme customization: colors, fonts, border-radius, etc.
+- Static pages: About Us, Privacy Policy, T&C
 
-### 10. **Audit Logging**
-- Every admin action logged: user, action, entity, timestamp
-- Used for compliance, debugging, user activity tracking
-- Displayed in /admin/audit-logs
+### 9. **Client-Side State Management (Zustand)**
+- **Cart**: Persisted to localStorage, no server state until checkout
+- **Wishlist**: 
+  - Logged-in users: Database-backed via WishlistItem
+  - Guest users: localStorage-backed, synced to DB on login
+- Real-time badge updates via Zustand hooks
+- Automatic localStorage persistence
+
+### 10. **Promotions & Coupons**
+- Coupon types: PERCENTAGE, FIXED_AMOUNT, FREE_SHIPPING
+- Minimum spend requirements and max discount caps
+- Date-based validity (startDate, endDate)
+- Usage limits per coupon
+- Applied at checkout
+- Stored in Order for reference
+
+### 11. **Reviews & Ratings**
+---
+
+## 🧬 Development Setup & Commands
+
+### Prerequisites
+- Node.js 18+ or 20+
+- PostgreSQL 13+
+- npm or yarn package manager
+
+### Installation & Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Generate Prisma client
+npm run postinstall
+
+# Setup environment variables
+cp .env.example .env.local
+# Edit .env.local with your database and API credentials
+
+# Run database migrations
+npx prisma migrate dev
+
+# Seed database with sample data
+npm run seed
+
+# Start development server
+npm run dev
+```
+
+### NPM Scripts
+
+```json
+{
+  "dev": "next dev",           // Start dev server (http://localhost:3000)
+  "build": "next build",       // Build for production
+  "start": "next start",       // Start production server
+  "lint": "eslint",            // Run ESLint
+  "postinstall": "prisma generate" // Auto-generate Prisma client
+}
+```
+
+### Prisma Commands
+
+```bash
+# Create a new migration
+npx prisma migrate dev --name <migration_name>
+
+# Reset database (wipe all data)
+npx prisma migrate reset
+
+# View database in UI
+npx prisma studio
+
+# Generate Prisma client
+npx prisma generate
+
+# Seed database
+npm run seed  # or npx tsx prisma/seed.ts
+```
+
+---
+
+## 🌍 Environment Variables (.env.local)
+
+```
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/neurosoftic
+
+# NextAuth
+NEXTAUTH_SECRET=<your-random-secret>
+NEXTAUTH_URL=http://localhost:3000
+
+# OAuth Providers (optional)
+GOOGLE_CLIENT_ID=<google-oauth-id>
+GOOGLE_CLIENT_SECRET=<google-oauth-secret>
+FACEBOOK_APP_ID=<facebook-app-id>
+FACEBOOK_APP_SECRET=<facebook-app-secret>
+
+# SSLCommerz Payment Gateway
+NEXT_PUBLIC_SSLCOMMERZ_STORE_ID=<store-id>
+SSLCOMMERZ_STORE_PASSWORD=<store-password>
+NEXT_PUBLIC_SSLCOMMERZ_API_URL=https://sandbox.sslcommerz.com  # or production URL
+
+# Steadfast Courier
+STEADFAST_API_KEY=<steadfast-api-key>
+STEADFAST_API_URL=https://api-staging.steadfast.io  # or production URL
+
+# Cloudinary
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=<cloud-name>
+CLOUDINARY_API_KEY=<api-key>
+CLOUDINARY_API_SECRET=<api-secret>
+
+# Application
+NODE_ENV=development
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+---
+
+## 📦 Key Dependencies & Versions
+
+### Core Framework & Runtime
+- **next** (16.3.0): React framework with App Router
+- **react** (19.2.8): UI library
+- **react-dom** (19.2.8): React DOM renderer
+
+### Database & ORM
+- **@prisma/client** (7.9.1): Type-safe database client
+- **prisma** (7.9.1): ORM and migration tool
+- **pg** (8.23.0): PostgreSQL driver
+- **@auth/prisma-adapter** (2.11.3): Prisma adapter for NextAuth
+- **@prisma/adapter-pg** (7.9.1): PostgreSQL adapter for Prisma
+
+### Authentication
+- **next-auth** (5.0.0-beta.32): Authentication framework
+- **bcryptjs** (3.0.3): Password hashing
+
+### Styling & UI
+- **tailwindcss** (4.3.3): CSS framework
+- **@tailwindcss/postcss** (4.3.3): PostCSS plugin for Tailwind
+- **postcss** (8.5.26): CSS processing
+- **class-variance-authority** (0.7.1): CSS class utility
+- **clsx** (2.1.1): Conditional classNames
+- **tailwind-merge** (3.6.0): Merge Tailwind classes
+- **tailwindcss-animate** (1.0.7): Animation utilities
+- **@base-ui/react** (1.7.0): Headless UI components
+
+### Form & Validation
+- **react-hook-form** (7.85.0): Form state management
+- **@hookform/resolvers** (5.7.1): Zod resolver for RHF
+- **zod** (4.4.3): Schema validation
+
+### HTTP & APIs
+- **axios** (1.19.0): HTTP client
+
+### Media & Uploads
+- **cloudinary** (2.10.0): Image upload and management
+- **bwip-js** (4.11.2): Barcode generation
+
+### State Management & Query
+- **zustand** (5.0.14): Lightweight state management
+- **@tanstack/react-query** (5.101.4): Server state management
+
+### Data & Utilities
+- **date-fns** (4.4.0): Date manipulation
+- **lucide-react** (1.31.0): Icon library
+- **pdfkit** (0.19.1): PDF generation
+- **framer-motion** (13.1.0): Animation library
+- **recharts** (3.10.1): React charts library
+
+### Build & Development
+- **typescript** (5): TypeScript compiler
+- **eslint** (9): Code linting
+- **@types/node** (20): Node.js type definitions
+- **@types/react** (19): React type definitions
+- **@types/react-dom** (19): React DOM type definitions
+- **@types/bcryptjs** (2.4.6): bcryptjs type definitions
+- **@types/pg** (8.21.0): PostgreSQL type definitions
+
+### Configuration & Utilities
+- **dotenv** (17.4.2): Environment variable loader
+- **tsx** (4.23.12): TypeScript executor
+- **eslint-config-next** (16.3.0): Next.js ESLint config
+- **shadcn** (4.17.0): UI component CLI
+- **install** (0.13.0): NPM package installer
+
+---
+
+## 🚀 Deployment Checklist
+
+### Before Deployment
+- [ ] Set `NODE_ENV=production`
+- [ ] Configure production database URL
+- [ ] Set strong `NEXTAUTH_SECRET`
+- [ ] Configure production API URLs (SSLCommerz, Steadfast, Cloudinary)
+- [ ] Update `NEXTAUTH_URL` to production domain
+- [ ] Run `npm run build` to verify build succeeds
+- [ ] Test payment flow with production credentials
+- [ ] Test shipping integration with production credentials
+
+### Deployment Platforms
+- **Vercel**: Recommended (built by Next.js creators)
+- **AWS**: EC2 with custom setup
+- **DigitalOcean**: App Platform or Droplet
+- **Railway**: Simple deployment
+- **Render**: Easy setup with PostgreSQL
+
+### Post-Deployment
+- [ ] Monitor application logs
+- [ ] Set up error tracking (Sentry)
+- [ ] Enable HTTPS
+- [ ] Configure CORS for third-party APIs
+- [ ] Set up automated backups
+- [ ] Monitor database performance
+- [ ] Enable rate limiting on public endpoints
+
+---
+
+## 🎯 Summary: How Components Work Together
+
+1. **UI Layer** → React Server Components & Client Components
+2. **State Management** → Zustand for client-side cart/wishlist
+3. **API Layer** → Next.js route handlers with NextAuth validation
+4. **Business Logic** → 16 services encapsulating workflows
+5. **External Integrations** → Provider pattern for payment & shipping
+6. **Data Access** → Prisma ORM with transactions
+7. **Database** → PostgreSQL with 24 models and full-text search
+
+**Key Principle**: Clear separation of concerns with unidirectional data flow:
+```
+UI Component → Server/Client State (Zustand) → API Route 
+→ Service Layer → Provider Layer → Prisma ORM → PostgreSQL
+                  ↑
+                  └─ (Response back up the chain)
+```
+
+**Benefits:**
+- ✅ Maintainability: Each layer has clear responsibility
+- ✅ Testability: Services can be tested independently
+- ✅ Scalability: New features added to layers without affecting others
+- ✅ Security: Auth & authorization at API boundary
+- ✅ Reusability: Services used by multiple API routes
+- ✅ Transaction Support: Complex operations wrapped in DB transactions
+- ✅ Type Safety: Full TypeScript coverage with Zod validation
+
+---
+
+## 📝 Notes
+
+- **Bangladesh Focus**: Optimized for SSLCommerz and Steadfast APIs
+- **Extensible**: Easy to add new payment gateways and courier providers
+- **Enterprise Ready**: Audit logging, role-based access, transaction management
+- **Performance**: Server components, request deduplication, caching strategies
+- **SEO Optimized**: Meta tags, structured data, URL slugs
+- **Accessible**: Base UI components, keyboard navigation, ARIA labels
+
+---
+
+## 🛠️ Service Layer Architecture (Business Logic)
+
+All business logic is encapsulated in services located in `src/lib/services/`. Each service handles a specific domain and is reusable across API routes.
+
+### Service Overview (16 Services)
+
+| Service | Purpose | Key Methods |
+|---------|---------|-------------|
+| `adminService.ts` | Admin dashboard stats, user management | `getAllUsers()`, `updateUserRole()`, `getLowStockProducts()`, `getDashboardStats()` |
+| `productService.ts` | Product CRUD, creation, slug validation | `createProduct()`, `updateProduct()`, `getProductBySlug()`, `getAllProducts()` |
+| `variantService.ts` | Variant management, SKU generation | `createVariant()`, `updateVariant()`, `deleteVariant()` |
+| `inventoryService.ts` | Stock management, movements | `getInventory()`, `adjustInventory()`, `createMovement()` |
+| `orderService.ts` | Customer order creation, status | `createOrder()`, `getOrderByNumber()`, `getUserOrders()` |
+| `orderAdminService.ts` | Admin order view, fulfillment | `getAllOrders()`, `updateOrderStatus()`, `getOrderForAdmin()` |
+| `customerService.ts` | Customer profile, addresses | `getCustomerProfile()`, `createAddress()`, `updateAddress()` |
+| `paymentService.ts` | Payment processing, webhooks | `initiatePayment()`, `handlePaymentCallback()`, `getPaymentStatus()` |
+| `courierService.ts` | Shipping integration | `createShipmentForOrder()`, `getShipmentStatus()`, `trackShipment()` |
+| `searchService.ts` | Full-text search | `searchProducts()` |
+| `reportService.ts` | Analytics, KPIs | `getSalesSummary()`, `getTopProducts()`, `getOrderStatusBreakdown()` |
+| `auditService.ts` | Audit logging | `logAction()`, `getAuditLogs()` |
+| `cmsService.ts` | Homepage content | `getActiveHomepageSections()`, `updateSection()` |
+| `themeService.ts` | Theme configuration | `getThemeConfig()`, `updateThemeConfig()`, `resetTheme()` |
+| `wishlistService.ts` | Wishlist operations | `addToWishlist()`, `removeFromWishlist()`, `getWishlistItems()` |
+| `homepageService.ts` | Homepage data aggregation | `getFeaturedProducts()`, `getFeaturedCategories()` |
+
+### Provider Layer (Third-party Integrations)
+
+| Provider | Purpose | Implementation |
+|----------|---------|-----------------|
+| `paymentProvider.ts` | Abstract payment interface | SSLCommerz (Bangladesh) |
+| `courierProvider.ts` | Abstract courier interface | Steadfast (Bangladesh) |
+
+**Design Pattern**: Each provider implements an interface, allowing easy addition of new providers (Pathao, TigerParcel, etc.)
+
+### Transaction Management
+
+- Prisma transactions wrap multi-step operations
+- Order creation: Create Order → Create OrderItems → Reserve Inventory → Create StatusHistory (atomic)
+- Payment success: Create Payment → Update Order status → Update Payment Status (atomic)
+- Automatic rollback if any step fails
 
 ---
 
